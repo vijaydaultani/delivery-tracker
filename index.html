@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Delivery Tracker">
+  <title>Delivery Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { overscroll-behavior-y: contain; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="module">
+    import React, { useState, useEffect } from 'https://cdn.skypack.dev/react';
+    import ReactDOM from 'https://cdn.skypack.dev/react-dom';
+    import { Download, Settings, Calendar, Check, Bell, Moon, Sun, Upload, RotateCcw, ChevronLeft, ChevronRight, FileText, BarChart3, Home } from 'https://cdn.skypack.dev/lucide-react';
+
+    function DeliveryTracker() {
+      const [activeTab, setActiveTab] = useState('home');
+      const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+      const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7));
+      const [viewMode, setViewMode] = useState('day');
+      const [darkMode, setDarkMode] = useState(false);
+      
+      const [rates, setRates] = useState({ lunch: 100, dinner: 100, milk: 50 });
+      const [rateHistory, setRateHistory] = useState([]);
+      const [vendors, setVendors] = useState({ lunch: 'Default Vendor', dinner: 'Default Vendor', milk: 'Default Vendor' });
+      const [reminderTimes, setReminderTimes] = useState({ lunch: '12:00', dinner: '19:00', milk: '07:00' });
+      const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+      
+      const [deliveries, setDeliveries] = useState({});
+      const [notes, setNotes] = useState({});
+      const [undoStack, setUndoStack] = useState([]);
+
+      useEffect(() => {
+        try {
+          const saved = localStorage.getItem('deliveryTrackerData');
+          if (saved) {
+            const data = JSON.parse(saved);
+            setDeliveries(data.deliveries || {});
+            setNotes(data.notes || {});
+            setRates(data.rates || { lunch: 100, dinner: 100, milk: 50 });
+            setRateHistory((data.rateHistory || []).slice(-100));
+            setVendors(data.vendors || { lunch: 'Default', dinner: 'Default', milk: 'Default' });
+            setReminderTimes(data.reminderTimes || { lunch: '12:00', dinner: '19:00', milk: '07:00' });
+            setDarkMode(data.darkMode || false);
+          }
+        } catch (error) {
+          console.error('Error loading data:', error);
+          alert('Error loading saved data. Starting fresh.');
+        }
+      }, []);
+
+      useEffect(() => {
+        try {
+          const data = { deliveries, notes, rates, rateHistory: rateHistory.slice(-100), vendors, reminderTimes, darkMode };
+          localStorage.setItem('deliveryTrackerData', JSON.stringify(data));
+        } catch (error) {
+          if (error.name === 'QuotaExceededError') {
+            alert('Storage full! Please export backup and clear old data.');
+          } else {
+            console.error('Error saving data:', error);
+          }
+        }
+      }, [deliveries, notes, rates, rateHistory, vendors, reminderTimes, darkMode]);
+
+      const saveToUndoStack = () => {
+        setUndoStack(prev => [...prev.slice(-9), { deliveries: {...deliveries}, notes: {...notes} }]);
+      };
+
+      const undo = () => {
+        if (undoStack.length > 0) {
+          const previous = undoStack[undoStack.length - 1];
+          setDeliveries(previous.deliveries);
+          setNotes(previous.notes);
+          setUndoStack(prev => prev.slice(0, -1));
+        }
+      };
+
+      const toggleDelivery = (date, type) => {
+        saveToUndoStack();
+        setDeliveries(prev => ({
+          ...prev,
+          [date]: { ...prev[date], [type]: !prev[date]?.[type] }
+        }));
+      };
+
+      const updateNote = (date, note) => {
+        setNotes(prev => ({ ...prev, [date]: note }));
+      };
+
+      const updateRate = (type, value) => {
+        const newRate = Number(value);
+        if (newRate !== rates[type]) {
+          setRateHistory(prev => [...prev, {
+            date: new Date().toISOString().split('T')[0],
+            type,
+            oldRate: rates[type],
+            newRate
+          }]);
+          setRates(prev => ({ ...prev, [type]: newRate }));
+        }
+      };
+
+      const requestNotificationPermission = async () => {
+        if (!('Notification' in window)) {
+          alert('Notifications not supported. For iOS, add to home screen and enable in Settings.');
+          return;
+        }
+        try {
+          const permission = await Notification.requestPermission();
+          setNotificationsEnabled(permission === 'granted');
+          if (permission === 'denied') {
+            alert('Notifications denied. Enable in browser/device settings.');
+          } else if (permission === 'granted') {
+            alert('Notifications enabled! Note: iOS requires adding to home screen.');
+          }
+        } catch (error) {
+          console.error('Notification error:', error);
+          alert('Could not enable notifications. Check your browser settings.');
+        }
+      };
+
+      const getDaysInMonth = (yearMonth) => {
+        const [year, month] = yearMonth.split('-').map(Number);
+        return new Date(year, month, 0).getDate();
+      };
+
+      const getWeekDates = (date) => {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day;
+        const sunday = new Date(d.setDate(diff));
+        return Array.from({ length: 7 }, (_, i) => {
+          const weekDay = new Date(sunday);
+          weekDay.setDate(sunday.getDate() + i);
+          return weekDay.toISOString().split('T')[0];
+        });
+      };
+
+      const generateReport = (yearMonth, period = 'month') => {
+        let dates = [];
+        
+        if (period === 'week') {
+          dates = getWeekDates(selectedDate);
+        } else if (period === 'quarter') {
+          const [year, month] = yearMonth.split('-').map(Number);
+          const startMonth = Math.floor((month - 1) / 3) * 3 + 1;
+          for (let m = startMonth; m < startMonth + 3; m++) {
+            const days = new Date(year, m, 0).getDate();
+            for (let d = 1; d <= days; d++) {
+              dates.push(`${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+            }
+          }
+        } else {
+          const days = getDaysInMonth(yearMonth);
+          for (let d = 1; d <= days; d++) {
+            dates.push(`${yearMonth}-${String(d).padStart(2, '0')}`);
+          }
+        }
+
+        const report = [];
+        let totals = { lunch: 0, dinner: 0, milk: 0 };
+        
+        dates.forEach(date => {
+          const dayData = deliveries[date] || {};
+          report.push({
+            date,
+            lunch: dayData.lunch || false,
+            dinner: dayData.dinner || false,
+            milk: dayData.milk || false,
+            note: notes[date] || ''
+          });
+          if (dayData.lunch) totals.lunch++;
+          if (dayData.dinner) totals.dinner++;
+          if (dayData.milk) totals.milk++;
+        });
+        
+        return { report, totals };
+      };
+
+      const downloadReport = (format = 'csv', period = 'month') => {
+        try {
+          const { report, totals } = generateReport(currentMonth, period);
+          
+          if (report.length === 0) {
+            alert('No data available for this period.');
+            return;
+          }
+          
+          const [year, month] = currentMonth.split('-');
+          const periodName = period === 'week' ? 'Week' : period === 'quarter' ? 'Quarter' : new Date(year, month - 1).toLocaleString('default', { month: 'long' });
+          
+          let content = `Delivery Report - ${periodName} ${year}\n\n`;
+          content += `Date,Lunch,Dinner,Milk,Notes,Vendor (L),Vendor (D),Vendor (M)\n`;
+          
+          report.forEach(day => {
+            const dateObj = new Date(day.date);
+            const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
+            const note = (day.note || '').replace(/,/g, ';').replace(/\n/g, ' ');
+            content += `${dayName},${day.lunch ? 'Yes' : 'No'},${day.dinner ? 'Yes' : 'No'},${day.milk ? 'Yes' : 'No'},${note},${vendors.lunch},${vendors.dinner},${vendors.milk}\n`;
+          });
+          
+          const amounts = {
+            lunch: totals.lunch * rates.lunch,
+            dinner: totals.dinner * rates.dinner,
+            milk: totals.milk * rates.milk
+          };
+          const total = amounts.lunch + amounts.dinner + amounts.milk;
+          
+          content += `\nSummary\n`;
+          content += `Item,Deliveries,Rate,Amount\n`;
+          content += `Lunch,${totals.lunch},₹${rates.lunch},₹${amounts.lunch}\n`;
+          content += `Dinner,${totals.dinner},₹${rates.dinner},₹${amounts.dinner}\n`;
+          content += `Milk,${totals.milk},₹${rates.milk},₹${amounts.milk}\n`;
+          content += `Total,,,₹${total}\n`;
+          
+          const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `delivery-report-${period}-${currentMonth}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error('Export error:', error);
+          alert('Error generating report. Please try again.');
+        }
+      };
+
+      const exportBackup = () => {
+        try {
+          const backup = { 
+            deliveries, 
+            notes, 
+            rates, 
+            rateHistory: rateHistory.slice(-100),
+            vendors, 
+            reminderTimes,
+            exportDate: new Date().toISOString(),
+            version: '1.0'
+          };
+          const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `delivery-backup-${new Date().toISOString().split('T')[0]}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error('Backup error:', error);
+          alert('Error creating backup. Please try again.');
+        }
+      };
+
+      const clearOldData = (monthsToKeep = 6) => {
+        if (!confirm(`This will delete data older than ${monthsToKeep} months. Continue?`)) {
+          return;
+        }
+        
+        try {
+          const cutoffDate = new Date();
+          cutoffDate.setMonth(cutoffDate.getMonth() - monthsToKeep);
+          const cutoff = cutoffDate.toISOString().split('T')[0];
+          
+          const newDeliveries = {};
+          const newNotes = {};
+          let deletedCount = 0;
+          
+          Object.keys(deliveries).forEach(date => {
+            if (date >= cutoff) {
+              newDeliveries[date] = deliveries[date];
+            } else {
+              deletedCount++;
+            }
+          });
+          
+          Object.keys(notes).forEach(date => {
+            if (date >= cutoff) {
+              newNotes[date] = notes[date];
+            }
+          });
+          
+          setDeliveries(newDeliveries);
+          setNotes(newNotes);
+          alert(`Cleaned up ${deletedCount} old entries. Data saved!`);
+        } catch (error) {
+          console.error('Cleanup error:', error);
+          alert('Error cleaning data. Please try again.');
+        }
+      };
+
+      const importBackup = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            try {
+              const backup = JSON.parse(event.target.result);
+              
+              if (typeof backup !== 'object') {
+                throw new Error('Invalid backup format');
+              }
+              
+              if (backup.deliveries && typeof backup.deliveries === 'object') {
+                setDeliveries(backup.deliveries);
+              }
+              if (backup.notes && typeof backup.notes === 'object') {
+                setNotes(backup.notes);
+              }
+              if (backup.rates && typeof backup.rates === 'object') {
+                setRates({ ...rates, ...backup.rates });
+              }
+              if (Array.isArray(backup.rateHistory)) {
+                setRateHistory(backup.rateHistory.slice(-100));
+              }
+              if (backup.vendors && typeof backup.vendors === 'object') {
+                setVendors({ ...vendors, ...backup.vendors });
+              }
+              if (backup.reminderTimes && typeof backup.reminderTimes === 'object') {
+                setReminderTimes({ ...reminderTimes, ...backup.reminderTimes });
+              }
+              
+              alert('Backup restored successfully!');
+              e.target.value = '';
+            } catch (err) {
+              console.error('Import error:', err);
+              alert('Invalid backup file. Please check the file and try again.');
+              e.target.value = '';
+            }
+          };
+          reader.onerror = () => {
+            alert('Error reading file. Please try again.');
+            e.target.value = '';
+          };
+          reader.readAsText(file);
+        }
+      };
+
+      const weekDates = getWeekDates(selectedDate);
+      const { report, totals } = generateReport(currentMonth);
+      const totalAmount = (totals.lunch * rates.lunch) + (totals.dinner * rates.dinner) + (totals.milk * rates.milk);
+      const today = new Date().toISOString().split('T')[0];
+      const todayData = deliveries[today] || {};
+
+      const bgClass = darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 to-indigo-100';
+      const cardClass = darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800';
+      const inputClass = darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900';
+
+      return React.createElement('div', { className: `min-h-screen ${bgClass} transition-colors duration-300` },
+        React.createElement('div', { className: `${cardClass} shadow-lg p-4 sticky top-0 z-10` },
+          React.createElement('div', { className: 'max-w-2xl mx-auto flex justify-between items-center' },
+            React.createElement('h1', { className: 'text-xl font-bold' }, 'Delivery Tracker'),
+            React.createElement('div', { className: 'flex gap-2' },
+              undoStack.length > 0 && React.createElement('button', { onClick: undo, className: 'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700' },
+                React.createElement(RotateCcw, { className: 'w-5 h-5' })
+              ),
+              React.createElement('button', { onClick: () => setDarkMode(!darkMode), className: 'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700' },
+                darkMode ? React.createElement(Sun, { className: 'w-5 h-5' }) : React.createElement(Moon, { className: 'w-5 h-5' })
+              )
+            )
+          )
+        ),
+        React.createElement('div', { className: 'max-w-2xl mx-auto p-4 pb-24' },
+          activeTab === 'home' && React.createElement('div', null,
+            React.createElement('div', { className: `${cardClass} rounded-2xl shadow-lg p-6 mb-4` },
+              React.createElement('div', { className: 'flex gap-2 mb-4 overflow-x-auto' },
+                React.createElement('button', { onClick: () => setViewMode('day'), className: `px-4 py-2 rounded-lg ${viewMode === 'day' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}` }, 'Day'),
+                React.createElement('button', { onClick: () => setViewMode('week'), className: `px-4 py-2 rounded-lg ${viewMode === 'week' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}` }, 'Week'),
+                React.createElement('button', { onClick: () => setViewMode('calendar'), className: `px-4 py-2 rounded-lg ${viewMode === 'calendar' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}` }, 'Calendar')
+              ),
+              viewMode === 'day' && React.createElement('div', null,
+                React.createElement('div', { className: 'flex items-center gap-2 mb-4' },
+                  React.createElement('button', { onClick: () => {
+                    const d = new Date(selectedDate);
+                    d.setDate(d.getDate() - 1);
+                    setSelectedDate(d.toISOString().split('T')[0]);
+                  }, className: 'p-2' }, React.createElement(ChevronLeft, { className: 'w-5 h-5' })),
+                  React.createElement('input', { type: 'date', value: selectedDate, max: today, onChange: (e) => setSelectedDate(e.target.value), className: `flex-1 px-4 py-2 border rounded-lg ${inputClass}` }),
+                  React.createElement('button', { onClick: () => {
+                    const d = new Date(selectedDate);
+                    d.setDate(d.getDate() + 1);
+                    if (d.toISOString().split('T')[0] <= today) setSelectedDate(d.toISOString().split('T')[0]);
+                  }, className: 'p-2' }, React.createElement(ChevronRight, { className: 'w-5 h-5' }))
+                ),
+                React.createElement('div', { className: 'space-y-3' },
+                  ['lunch', 'dinner', 'milk'].map(type =>
+                    React.createElement('div', { key: type },
+                      React.createElement('label', { className: 'flex items-center gap-3 cursor-pointer mb-1' },
+                        React.createElement('input', { type: 'checkbox', checked: deliveries[selectedDate]?.[type] || false, onChange: () => toggleDelivery(selectedDate, type), className: 'w-5 h-5 rounded' }),
+                        React.createElement('span', { className: 'capitalize font-medium' }, type),
+                        React.createElement('span', { className: 'text-sm text-gray-500' }, `(${vendors[type]})`)
+                      )
+                    )
+                  )
+                ),
+                React.createElement('div', { className: 'mt-4' },
+                  React.createElement('label', { className: 'block text-sm font-medium mb-2' }, 'Notes'),
+                  React.createElement('textarea', { value: notes[selectedDate] || '', onChange: (e) => updateNote(selectedDate, e.target.value), placeholder: 'Add notes for this day...', className: `w-full px-3 py-2 border rounded-lg ${inputClass}`, rows: 2 })
+                )
+              ),
+              viewMode === 'week' && React.createElement('div', { className: 'overflow-x-auto' },
+                React.createElement('table', { className: 'w-full text-sm' },
+                  React.createElement('thead', null,
+                    React.createElement('tr', null,
+                      weekDates.map(date =>
+                        React.createElement('th', { key: date, className: 'px-2 py-2 text-center' },
+                          React.createElement('div', { className: 'text-xs' }, new Date(date).toLocaleDateString('en-US', { weekday: 'short' })),
+                          React.createElement('div', { className: 'text-xs' }, new Date(date).getDate())
+                        )
+                      )
+                    )
+                  ),
+                  React.createElement('tbody', null,
+                    ['lunch', 'dinner', 'milk'].map(type =>
+                      React.createElement('tr', { key: type },
+                        weekDates.map(date =>
+                          React.createElement('td', { key: date, className: 'px-2 py-2 text-center' },
+                            React.createElement('input', { type: 'checkbox', checked: deliveries[date]?.[type] || false, onChange: () => toggleDelivery(date, type), className: 'w-4 h-4' })
+                          )
+                        )
+                      )
+                    )
+                  )
+                ),
+                React.createElement('div', { className: 'flex justify-between text-xs mt-2 font-medium' },
+                  React.createElement('span', null, 'Lunch'),
+                  React.createElement('span', null, 'Dinner'),
+                  React.createElement('span', null, 'Milk')
+                )
+              ),
+              viewMode === 'calendar' && React.createElement('div', { className: 'grid grid-cols-7 gap-1' },
+                Array.from({ length: getDaysInMonth(currentMonth) }, (_, i) => {
+                  const date = `${currentMonth}-${String(i + 1).padStart(2, '0')}`;
+                  const data = deliveries[date] || {};
+                  return React.createElement('div', { 
+                    key: date, 
+                    onClick: () => { setSelectedDate(date); setViewMode('day'); }, 
+                    className: `p-2 border rounded cursor-pointer text-center ${selectedDate === date ? 'bg-indigo-600 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}` 
+                  },
+                    React.createElement('div', { className: 'text-xs font-bold' }, i + 1),
+                    React.createElement('div', { className: 'flex justify-center gap-1 mt-1' },
+                      data.lunch && React.createElement('div', { className: 'w-1 h-1 bg-green-500 rounded-full' }),
+                      data.dinner && React.createElement('div', { className: 'w-1 h-1 bg-blue-500 rounded-full' }),
+                      data.milk && React.createElement('div', { className: 'w-1 h-1 bg-yellow-500 rounded-full' })
+                    )
+                  );
+                })
+              )
+            )
+          ),
+          activeTab === 'reports' && React.createElement('div', null,
+            React.createElement('div', { className: `${cardClass} rounded-2xl shadow-lg p-6 mb-4` },
+              React.createElement('div', { className: 'flex justify-between items-center mb-4' },
+                React.createElement('h2', { className: 'text-xl font-bold' }, 'Reports'),
+                React.createElement('div', { className: 'flex gap-2' },
+                  React.createElement('button', { onClick: () => downloadReport('csv', 'week'), className: 'px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm' }, 'Week'),
+                  React.createElement('button', { onClick: () => downloadReport('csv', 'month'), className: 'px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm' }, 'Month'),
+                  React.createElement('button', { onClick: () => downloadReport('csv', 'quarter'), className: 'px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm' }, 'Quarter')
+                )
+              ),
+              React.createElement('input', { type: 'month', value: currentMonth, max: new Date().toISOString().slice(0, 7), onChange: (e) => setCurrentMonth(e.target.value), className: `w-full px-4 py-2 border rounded-lg mb-4 ${inputClass}` }),
+              React.createElement('div', { className: 'bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-4 mb-4 text-white' },
+                React.createElement('div', { className: 'grid grid-cols-3 gap-2 mb-3 text-sm' },
+                  React.createElement('div', null, React.createElement('div', { className: 'font-semibold' }, 'Lunch'), React.createElement('div', null, `${totals.lunch} × ₹${rates.lunch}`)),
+                  React.createElement('div', null, React.createElement('div', { className: 'font-semibold' }, 'Dinner'), React.createElement('div', null, `${totals.dinner} × ₹${rates.dinner}`)),
+                  React.createElement('div', null, React.createElement('div', {
