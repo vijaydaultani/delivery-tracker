@@ -224,49 +224,247 @@
             const [year, month] = currentMonth.split('-');
             const periodName = period === 'week' ? 'Week' : period === 'quarter' ? 'Quarter' : new Date(year, month - 1).toLocaleString('default', { month: 'long' });
             
-            let content = '';
+            let htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery Report - ${selectedVendor === 'all' ? 'Combined' : selectedVendor.charAt(0).toUpperCase() + selectedVendor.slice(1)}</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 3px solid #6366f1;
+      padding-bottom: 20px;
+    }
+    h1 {
+      color: #1f2937;
+      margin: 0 0 10px 0;
+      font-size: 28px;
+    }
+    .vendor-info {
+      background: #eff6ff;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border-left: 4px solid #3b82f6;
+    }
+    .vendor-info p {
+      margin: 5px 0;
+      color: #1e40af;
+      font-weight: 500;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th {
+      background: #6366f1;
+      color: white;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    tr:hover {
+      background: #f9fafb;
+    }
+    .yes {
+      color: #059669;
+      font-weight: 600;
+    }
+    .no {
+      color: #dc2626;
+    }
+    .summary {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 10px;
+      margin-top: 30px;
+    }
+    .summary h2 {
+      margin: 0 0 15px 0;
+      font-size: 20px;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .summary-item {
+      background: rgba(255,255,255,0.2);
+      padding: 12px;
+      border-radius: 8px;
+    }
+    .summary-label {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-bottom: 5px;
+    }
+    .summary-value {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .total-amount {
+      font-size: 32px;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 2px solid rgba(255,255,255,0.3);
+    }
+    @media print {
+      body { background: white; }
+      .container { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Delivery Report</h1>
+      <p style="color: #6b7280; margin: 5px 0;">${periodName} ${year}</p>
+    </div>
+`;
             
             if (selectedVendor === 'all') {
-              content = `Delivery Report - Combined - ${periodName} ${year}\n\n`;
-              content += `Date,Lunch,Dinner,Milk,Notes\n`;
+              htmlContent += `
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th style="text-align: center;">Lunch</th>
+          <th style="text-align: center;">Dinner</th>
+          <th style="text-align: center;">Milk</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>`;
+              
               report.forEach(day => {
                 const dateObj = new Date(day.date);
                 const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
-                const note = (day.note || '').replace(/,/g, ';').replace(/\n/g, ' ');
-                content += `${dayName},${day.lunch ? 'Yes' : 'No'},${day.dinner ? 'Yes' : 'No'},${day.milk ? 'Yes' : 'No'},${note}\n`;
+                htmlContent += `
+        <tr>
+          <td><strong>${dayName}</strong></td>
+          <td style="text-align: center;" class="${day.lunch ? 'yes' : 'no'}">${day.lunch ? '✓ Yes' : '✗ No'}</td>
+          <td style="text-align: center;" class="${day.dinner ? 'yes' : 'no'}">${day.dinner ? '✓ Yes' : '✗ No'}</td>
+          <td style="text-align: center;" class="${day.milk ? 'yes' : 'no'}">${day.milk ? '✓ Yes' : '✗ No'}</td>
+          <td>${day.note || '-'}</td>
+        </tr>`;
               });
               
-              content += `\nSummary\n`;
-              content += `Lunch,${totals.lunch},₹${rates.lunch},₹${totals.lunch * rates.lunch}\n`;
-              content += `Dinner,${totals.dinner},₹${rates.dinner},₹${totals.dinner * rates.dinner}\n`;
-              content += `Milk,${totals.milk},₹${rates.milk},₹${totals.milk * rates.milk}\n`;
-              content += `Total,,,₹${(totals.lunch * rates.lunch) + (totals.dinner * rates.dinner) + (totals.milk * rates.milk)}\n`;
+              htmlContent += `
+      </tbody>
+    </table>
+
+    <div class="summary">
+      <h2>Summary</h2>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-label">Lunch Deliveries</div>
+          <div class="summary-value">${totals.lunch}</div>
+          <div class="summary-label">₹${rates.lunch} × ${totals.lunch} = ₹${totals.lunch * rates.lunch}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Dinner Deliveries</div>
+          <div class="summary-value">${totals.dinner}</div>
+          <div class="summary-label">₹${rates.dinner} × ${totals.dinner} = ₹${totals.dinner * rates.dinner}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Milk Deliveries</div>
+          <div class="summary-value">${totals.milk}</div>
+          <div class="summary-label">₹${rates.milk} × ${totals.milk} = ₹${totals.milk * rates.milk}</div>
+        </div>
+      </div>
+      <div class="total-amount">
+        Total Amount: ₹${(totals.lunch * rates.lunch) + (totals.dinner * rates.dinner) + (totals.milk * rates.milk)}
+      </div>
+    </div>`;
             } else {
               const itemName = selectedVendor.charAt(0).toUpperCase() + selectedVendor.slice(1);
-              content = `Delivery Report - ${itemName}\n`;
-              content += `Vendor: ${vendors[selectedVendor]}\n`;
-              content += `Period: ${periodName} ${year}\n\n`;
-              content += `Date,Delivered,Notes\n`;
+              htmlContent += `
+    <div class="vendor-info">
+      <p><strong>Item:</strong> ${itemName}</p>
+      <p><strong>Vendor:</strong> ${vendors[selectedVendor]}</p>
+      <p><strong>Rate:</strong> ₹${rates[selectedVendor]} per delivery</p>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th style="text-align: center;">Delivered</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>`;
+              
               report.forEach(day => {
                 const dateObj = new Date(day.date);
                 const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
-                const note = (day.note || '').replace(/,/g, ';').replace(/\n/g, ' ');
-                content += `${dayName},${day[selectedVendor] ? 'Yes' : 'No'},${note}\n`;
+                htmlContent += `
+        <tr>
+          <td><strong>${dayName}</strong></td>
+          <td style="text-align: center;" class="${day[selectedVendor] ? 'yes' : 'no'}">${day[selectedVendor] ? '✓ Yes' : '✗ No'}</td>
+          <td>${day.note || '-'}</td>
+        </tr>`;
               });
               
               const itemTotal = totals[selectedVendor];
               const amount = itemTotal * rates[selectedVendor];
-              content += `\nSummary\n`;
-              content += `Total Deliveries,${itemTotal}\n`;
-              content += `Rate per Delivery,₹${rates[selectedVendor]}\n`;
-              content += `Total Amount,₹${amount}\n`;
+              
+              htmlContent += `
+      </tbody>
+    </table>
+
+    <div class="summary">
+      <h2>Summary</h2>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-label">Total Deliveries</div>
+          <div class="summary-value">${itemTotal}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Rate per Delivery</div>
+          <div class="summary-value">₹${rates[selectedVendor]}</div>
+        </div>
+      </div>
+      <div class="total-amount">
+        Total Amount: ₹${amount}
+      </div>
+    </div>`;
             }
+
+            htmlContent += `
+  </div>
+</body>
+</html>`;
             
-            const blob = new Blob([content], { type: 'text/csv' });
+            const blob = new Blob([htmlContent], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `delivery-report-${selectedVendor}-${period}-${currentMonth}.csv`;
+            a.download = `delivery-report-${selectedVendor}-${period}-${currentMonth}.html`;
             a.click();
             URL.revokeObjectURL(url);
           } catch (error) {
