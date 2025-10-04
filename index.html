@@ -54,6 +54,9 @@
       const [notes, setNotes] = useState({});
       const [undoStack, setUndoStack] = useState([]);
       const [tempDeliveries, setTempDeliveries] = useState({});
+      const [showReportModal, setShowReportModal] = useState(false);
+      const [reportPeriod, setReportPeriod] = useState('month');
+      const [reportSelections, setReportSelections] = useState({ lunch: false, dinner: false, milk: false });
 
       useEffect(() => {
         try {
@@ -62,9 +65,9 @@
             const data = JSON.parse(saved);
             setDeliveries(data.deliveries || {});
             setNotes(data.notes || {});
-            setRates(data.rates || { lunch: 100, dinner: 100, milk: 50 });
+            setRates(data.rates || { lunch: 100, dinner: 150, milk: 16 });
             setRateHistory((data.rateHistory || []).slice(-100));
-            setVendors(data.vendors || { lunch: 'Default', dinner: 'Default', milk: 'Default' });
+            setVendors(data.vendors || { lunch: 'Poonam Bhabhi', dinner: 'Neetu Bhabhi', milk: 'Vishal Bhaiya' });
             setReminderTimes(data.reminderTimes || { lunch: '12:00', dinner: '19:00', milk: '07:00' });
             setDarkMode(data.darkMode || false);
           }
@@ -215,68 +218,92 @@
       };
 
       const downloadReport = (period = 'month') => {
-        const vendor = prompt('Which report to generate?\n\nType one of:\n- lunch\n- dinner\n- milk\n- all (for combined report)');
+        // Create a modal/dialog for checkbox selection
+        const reportOptions = ['lunch', 'dinner', 'milk', 'all'];
+        let selectedVendors = [];
         
-        if (!vendor || !['lunch', 'dinner', 'milk', 'all'].includes(vendor.toLowerCase())) {
-          alert('Invalid selection. Please choose: lunch, dinner, milk, or all');
+        // Create selection dialog
+        let selectionHTML = 'Select which reports to generate:\n\n';
+        const lunchCheck = confirm('Include LUNCH report?');
+        if (lunchCheck) selectedVendors.push('lunch');
+        
+        const dinnerCheck = confirm('Include DINNER report?');
+        if (dinnerCheck) selectedVendors.push('dinner');
+        
+        const milkCheck = confirm('Include MILK report?');
+        if (milkCheck) selectedVendors.push('milk');
+        
+        if (selectedVendors.length === 0) {
+          alert('No reports selected. Cancelled.');
           return;
         }
-
-        const selectedVendor = vendor.toLowerCase();
         
-        try {
-          const { report, totals } = generateReport(currentMonth, period);
-          if (report.length === 0) {
-            alert('No data available for this period.');
-            return;
-          }
-          
-          const [year, month] = currentMonth.split('-');
-          const periodName = period === 'week' ? 'Week' : period === 'quarter' ? 'Quarter' : new Date(year, month - 1).toLocaleString('default', { month: 'long' });
-          
-          let content = `Delivery Report - ${selectedVendor === 'all' ? 'All Items' : selectedVendor.charAt(0).toUpperCase() + selectedVendor.slice(1)} - ${periodName} ${year}\n\n`;
-          
-          if (selectedVendor === 'all') {
-            content += `Date,Lunch,Dinner,Milk,Notes\n`;
-            report.forEach(day => {
-              const dateObj = new Date(day.date);
-              const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
-              const note = (day.note || '').replace(/,/g, ';').replace(/\n/g, ' ');
-              content += `${dayName},${day.lunch ? 'Yes' : 'No'},${day.dinner ? 'Yes' : 'No'},${day.milk ? 'Yes' : 'No'},${note}\n`;
-            });
-            
-            content += `\nSummary\n`;
-            content += `Lunch,${totals.lunch},₹${rates.lunch},₹${totals.lunch * rates.lunch}\n`;
-            content += `Dinner,${totals.dinner},₹${rates.dinner},₹${totals.dinner * rates.dinner}\n`;
-            content += `Milk,${totals.milk},₹${rates.milk},₹${totals.milk * rates.milk}\n`;
-            content += `Total,,,₹${(totals.lunch * rates.lunch) + (totals.dinner * rates.dinner) + (totals.milk * rates.milk)}\n`;
-          } else {
-            content += `Date,Delivered,Vendor,Notes\n`;
-            report.forEach(day => {
-              const dateObj = new Date(day.date);
-              const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
-              const note = (day.note || '').replace(/,/g, ';').replace(/\n/g, ' ');
-              content += `${dayName},${day[selectedVendor] ? 'Yes' : 'No'},${vendors[selectedVendor]},${note}\n`;
-            });
-            
-            const itemTotal = totals[selectedVendor];
-            const amount = itemTotal * rates[selectedVendor];
-            content += `\nSummary\n`;
-            content += `Total Deliveries,${itemTotal}\n`;
-            content += `Rate per Delivery,₹${rates[selectedVendor]}\n`;
-            content += `Total Amount,₹${amount}\n`;
-          }
-          
-          const blob = new Blob([content], { type: 'text/csv' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `delivery-report-${selectedVendor}-${period}-${currentMonth}.csv`;
-          a.click();
-          URL.revokeObjectURL(url);
-        } catch (error) {
-          alert('Error generating report.');
+        // If all three selected, generate combined report
+        if (selectedVendors.length === 3) {
+          selectedVendors = ['all'];
         }
+
+        // Generate reports for each selection
+        selectedVendors.forEach(selectedVendor => {
+          try {
+            const { report, totals } = generateReport(currentMonth, period);
+            if (report.length === 0) {
+              alert('No data available for this period.');
+              return;
+            }
+            
+            const [year, month] = currentMonth.split('-');
+            const periodName = period === 'week' ? 'Week' : period === 'quarter' ? 'Quarter' : new Date(year, month - 1).toLocaleString('default', { month: 'long' });
+            
+            let content = '';
+            
+            if (selectedVendor === 'all') {
+              content = `Delivery Report - Combined - ${periodName} ${year}\n\n`;
+              content += `Date,Lunch,Dinner,Milk,Notes\n`;
+              report.forEach(day => {
+                const dateObj = new Date(day.date);
+                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
+                const note = (day.note || '').replace(/,/g, ';').replace(/\n/g, ' ');
+                content += `${dayName},${day.lunch ? 'Yes' : 'No'},${day.dinner ? 'Yes' : 'No'},${day.milk ? 'Yes' : 'No'},${note}\n`;
+              });
+              
+              content += `\nSummary\n`;
+              content += `Lunch,${totals.lunch},₹${rates.lunch},₹${totals.lunch * rates.lunch}\n`;
+              content += `Dinner,${totals.dinner},₹${rates.dinner},₹${totals.dinner * rates.dinner}\n`;
+              content += `Milk,${totals.milk},₹${rates.milk},₹${totals.milk * rates.milk}\n`;
+              content += `Total,,,₹${(totals.lunch * rates.lunch) + (totals.dinner * rates.dinner) + (totals.milk * rates.milk)}\n`;
+            } else {
+              const itemName = selectedVendor.charAt(0).toUpperCase() + selectedVendor.slice(1);
+              content = `Delivery Report - ${itemName}\n`;
+              content += `Vendor: ${vendors[selectedVendor]}\n`;
+              content += `Period: ${periodName} ${year}\n\n`;
+              content += `Date,Delivered,Notes\n`;
+              report.forEach(day => {
+                const dateObj = new Date(day.date);
+                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
+                const note = (day.note || '').replace(/,/g, ';').replace(/\n/g, ' ');
+                content += `${dayName},${day[selectedVendor] ? 'Yes' : 'No'},${note}\n`;
+              });
+              
+              const itemTotal = totals[selectedVendor];
+              const amount = itemTotal * rates[selectedVendor];
+              content += `\nSummary\n`;
+              content += `Total Deliveries,${itemTotal}\n`;
+              content += `Rate per Delivery,₹${rates[selectedVendor]}\n`;
+              content += `Total Amount,₹${amount}\n`;
+            }
+            
+            const blob = new Blob([content], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `delivery-report-${selectedVendor}-${period}-${currentMonth}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+          } catch (error) {
+            alert('Error generating report for ' + selectedVendor);
+          }
+        });
       };
 
       const exportBackup = () => {
@@ -481,7 +508,7 @@
                   <h2 className="text-xl font-bold">Reports</h2>
                 </div>
                 
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Click any button below. You'll be asked which report to generate: lunch, dinner, milk, or all.</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Click any button below. You'll be asked to select which reports to generate via checkboxes.</p>
                 
                 <div className="flex gap-2 mb-4">
                   <button onClick={() => downloadReport('week')} className="flex-1 px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm">Week</button>
