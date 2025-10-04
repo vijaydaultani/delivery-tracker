@@ -2,896 +2,289 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Delivery Tracker">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Delivery Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    * { -webkit-tap-highlight-color: transparent; }
-    body { overscroll-behavior-y: contain; margin: 0; }
-  </style>
 </head>
 <body>
   <div id="root"></div>
-
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    const DownloadIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>;
-    const SettingsIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
-    const CheckIcon = () => <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>;
-    const UndoIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>;
-    const MoonIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>;
-    const SunIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
-    const UploadIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>;
-    const LeftIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>;
-    const RightIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>;
+    const HomeIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
     const FileIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
     const ChartIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
-    const HomeIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
+    const SettingsIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
+    const CheckIcon = () => <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>;
+    const DownloadIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>;
 
-    function DeliveryTracker() {
-      const [activeTab, setActiveTab] = useState('home');
-      const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-      const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7));
-      const [viewMode, setViewMode] = useState('day');
-      const [darkMode, setDarkMode] = useState(false);
-      const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    function App() {
+      const [tab, setTab] = useState('home');
+      const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+      const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+      const [view, setView] = useState('day');
+      const [dark, setDark] = useState(false);
+      const [changed, setChanged] = useState(false);
       const [settingsChanged, setSettingsChanged] = useState(false);
       
       const [rates, setRates] = useState({ lunch: 100, dinner: 150, milk: 16 });
       const [vendors, setVendors] = useState({ lunch: 'Poonam Bhabhi', dinner: 'Neetu Bhabhi', milk: 'Vishal Bhaiya' });
-      const [reminderTimes, setReminderTimes] = useState({ lunch: '12:00', dinner: '19:00', milk: '07:00' });
-      const [reportSelections, setReportSelections] = useState({ lunch: false, dinner: false, milk: false, combined: false });
+      const [selections, setSelections] = useState({ lunch: false, dinner: false, milk: false, combined: false });
       
       const [deliveries, setDeliveries] = useState({});
-      const [notes, setNotes] = useState({});
-      const [undoStack, setUndoStack] = useState([]);
-      const [tempDeliveries, setTempDeliveries] = useState({});
+      const [temp, setTemp] = useState({});
 
       useEffect(() => {
-        try {
-          const saved = localStorage.getItem('deliveryTrackerData');
-          if (saved) {
-            const data = JSON.parse(saved);
-            setDeliveries(data.deliveries || {});
-            setNotes(data.notes || {});
-            setRates(data.rates || { lunch: 100, dinner: 150, milk: 16 });
-            setVendors(data.vendors || { lunch: 'Poonam Bhabhi', dinner: 'Neetu Bhabhi', milk: 'Vishal Bhaiya' });
-            setReminderTimes(data.reminderTimes || { lunch: '12:00', dinner: '19:00', milk: '07:00' });
-            setDarkMode(data.darkMode || false);
-          }
-        } catch (error) {
-          console.error('Error loading data:', error);
+        const saved = localStorage.getItem('deliveryData');
+        if (saved) {
+          const data = JSON.parse(saved);
+          setDeliveries(data.deliveries || {});
+          setRates(data.rates || { lunch: 100, dinner: 150, milk: 16 });
+          setVendors(data.vendors || { lunch: 'Poonam Bhabhi', dinner: 'Neetu Bhabhi', milk: 'Vishal Bhaiya' });
         }
       }, []);
 
       useEffect(() => {
-        try {
-          const data = { deliveries, notes, rates, vendors, reminderTimes, darkMode };
-          localStorage.setItem('deliveryTrackerData', JSON.stringify(data));
-        } catch (error) {
-          if (error.name === 'QuotaExceededError') {
-            alert('Storage full! Please export backup and clear old data.');
-          }
-        }
-      }, [deliveries, notes, rates, vendors, reminderTimes, darkMode]);
+        localStorage.setItem('deliveryData', JSON.stringify({ deliveries, rates, vendors }));
+      }, [deliveries, rates, vendors]);
 
       useEffect(() => {
-        setTempDeliveries(deliveries);
-        setHasUnsavedChanges(false);
-      }, [selectedDate, viewMode]);
+        setTemp(deliveries);
+        setChanged(false);
+      }, [date, view]);
 
-      const saveToUndoStack = () => {
-        setUndoStack(prev => [...prev.slice(-9), { deliveries: {...deliveries}, notes: {...notes} }]);
+      const toggle = (d, type) => {
+        setTemp(prev => ({ ...prev, [d]: { ...prev[d], [type]: !prev[d]?.[type] } }));
+        setChanged(true);
       };
 
-      const undo = () => {
-        if (undoStack.length > 0) {
-          const previous = undoStack[undoStack.length - 1];
-          setDeliveries(previous.deliveries);
-          setNotes(previous.notes);
-          setUndoStack(prev => prev.slice(0, -1));
-        }
-      };
-
-      const toggleDelivery = (date, type) => {
-        setTempDeliveries(prev => ({
-          ...prev,
-          [date]: { ...prev[date], [type]: !prev[date]?.[type] }
-        }));
-        setHasUnsavedChanges(true);
-      };
-
-      const submitDeliveries = () => {
-        saveToUndoStack();
-        setDeliveries(tempDeliveries);
-        setHasUnsavedChanges(false);
-        alert('Deliveries saved successfully!');
-      };
-
-      const updateNote = (date, note) => {
-        setNotes(prev => ({ ...prev, [date]: note }));
-      };
-
-      const updateRate = (type, value) => {
-        setRates(prev => ({ ...prev, [type]: Number(value) }));
-        setSettingsChanged(true);
-      };
-
-      const updateVendor = (type, value) => {
-        setVendors(prev => ({ ...prev, [type]: value }));
-        setSettingsChanged(true);
-      };
-
-      const updateReminderTime = (type, value) => {
-        setReminderTimes(prev => ({ ...prev, [type]: value }));
-        setSettingsChanged(true);
+      const submit = () => {
+        setDeliveries(temp);
+        setChanged(false);
+        alert('Saved!');
       };
 
       const saveSettings = () => {
         setSettingsChanged(false);
-        alert('Settings saved successfully!');
+        alert('Settings saved!');
       };
 
-      const getDaysInMonth = (yearMonth) => {
-        const [year, month] = yearMonth.split('-').map(Number);
-        return new Date(year, month, 0).getDate();
+      const getDays = (ym) => {
+        const [y, m] = ym.split('-').map(Number);
+        return new Date(y, m, 0).getDate();
       };
 
-      const getWeekDates = (date) => {
-        const d = new Date(date);
-        const day = d.getDay();
-        const diff = d.getDate() - day;
-        const sunday = new Date(d.setDate(diff));
-        return Array.from({ length: 7 }, (_, i) => {
-          const weekDay = new Date(sunday);
-          weekDay.setDate(sunday.getDate() + i);
-          return weekDay.toISOString().split('T')[0];
-        });
-      };
-
-      const generateReport = (yearMonth, period = 'month') => {
+      const getReport = (ym, period = 'month') => {
         let dates = [];
-        
-        if (period === 'week') {
-          dates = getWeekDates(selectedDate);
-        } else if (period === 'quarter') {
-          const [year, month] = yearMonth.split('-').map(Number);
-          const startMonth = Math.floor((month - 1) / 3) * 3 + 1;
-          for (let m = startMonth; m < startMonth + 3; m++) {
-            const days = new Date(year, m, 0).getDate();
-            for (let d = 1; d <= days; d++) {
-              dates.push(`${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
-            }
-          }
-        } else {
-          const days = getDaysInMonth(yearMonth);
+        if (period === 'month') {
+          const days = getDays(ym);
           for (let d = 1; d <= days; d++) {
-            dates.push(`${yearMonth}-${String(d).padStart(2, '0')}`);
+            dates.push(`${ym}-${String(d).padStart(2, '0')}`);
           }
         }
-
         const report = [];
         let totals = { lunch: 0, dinner: 0, milk: 0 };
-        
-        dates.forEach(date => {
-          const dayData = deliveries[date] || {};
-          report.push({
-            date,
-            lunch: dayData.lunch || false,
-            dinner: dayData.dinner || false,
-            milk: dayData.milk || false,
-            note: notes[date] || ''
-          });
-          if (dayData.lunch) totals.lunch++;
-          if (dayData.dinner) totals.dinner++;
-          if (dayData.milk) totals.milk++;
+        dates.forEach(dt => {
+          const day = deliveries[dt] || {};
+          report.push({ date: dt, lunch: day.lunch || false, dinner: day.dinner || false, milk: day.milk || false });
+          if (day.lunch) totals.lunch++;
+          if (day.dinner) totals.dinner++;
+          if (day.milk) totals.milk++;
         });
-        
         return { report, totals };
       };
 
-      const downloadReport = (period) => {
-        const selectedVendors = [];
-        
-        if (reportSelections.combined) {
-          selectedVendors.push('all');
-        } else {
-          if (reportSelections.lunch) selectedVendors.push('lunch');
-          if (reportSelections.dinner) selectedVendors.push('dinner');
-          if (reportSelections.milk) selectedVendors.push('milk');
+      const download = (period) => {
+        const selected = [];
+        if (selections.combined) selected.push('all');
+        else {
+          if (selections.lunch) selected.push('lunch');
+          if (selections.dinner) selected.push('dinner');
+          if (selections.milk) selected.push('milk');
         }
-        
-        if (selectedVendors.length === 0) {
-          alert('Please select at least one report.');
-          return;
-        }
+        if (selected.length === 0) { alert('Select a report'); return; }
 
-        selectedVendors.forEach(selectedVendor => {
-          try {
-            const { report, totals } = generateReport(currentMonth, period);
-            if (report.length === 0) {
-              alert('No data available for this period.');
-              return;
-            }
-            
-            const [year, month] = currentMonth.split('-');
-            const periodName = period === 'week' ? 'Week' : period === 'quarter' ? 'Quarter' : new Date(year, month - 1).toLocaleString('default', { month: 'long' });
-            
-            let htmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Delivery Report - ${selectedVendor === 'all' ? 'Combined' : selectedVendor.charAt(0).toUpperCase() + selectedVendor.slice(1)}</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 20px;
-      background: #f5f5f5;
-    }
-    .container {
-      background: white;
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-      border-bottom: 3px solid #6366f1;
-      padding-bottom: 20px;
-    }
-    h1 {
-      color: #1f2937;
-      margin: 0 0 10px 0;
-      font-size: 28px;
-    }
-    .vendor-info {
-      background: #eff6ff;
-      padding: 15px;
-      border-radius: 8px;
-      margin: 20px 0;
-      border-left: 4px solid #3b82f6;
-    }
-    .vendor-info p {
-      margin: 5px 0;
-      color: #1e40af;
-      font-weight: 500;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-    }
-    th {
-      background: #6366f1;
-      color: white;
-      padding: 12px;
-      text-align: left;
-      font-weight: 600;
-    }
-    td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    tr:hover {
-      background: #f9fafb;
-    }
-    .yes {
-      color: #059669;
-      font-weight: 600;
-    }
-    .no {
-      color: #dc2626;
-    }
-    .summary {
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      color: white;
-      padding: 25px;
-      border-radius: 10px;
-      margin-top: 30px;
-    }
-    .summary h2 {
-      margin: 0 0 15px 0;
-      font-size: 20px;
-    }
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
-    }
-    .summary-item {
-      background: rgba(255,255,255,0.2);
-      padding: 12px;
-      border-radius: 8px;
-    }
-    .summary-label {
-      font-size: 12px;
-      opacity: 0.9;
-      margin-bottom: 5px;
-    }
-    .summary-value {
-      font-size: 24px;
-      font-weight: bold;
-    }
-    .total-amount {
-      font-size: 32px;
-      font-weight: bold;
-      text-align: center;
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 2px solid rgba(255,255,255,0.3);
-    }
-    @media print {
-      body { background: white; }
-      .container { box-shadow: none; }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Delivery Report</h1>
-      <p style="color: #6b7280; margin: 5px 0;">${periodName} ${year}</p>
-    </div>
-`;
-            
-            if (selectedVendor === 'all') {
-              htmlContent += `
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th style="text-align: center;">Lunch</th>
-          <th style="text-align: center;">Dinner</th>
-          <th style="text-align: center;">Milk</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>`;
-              
-              report.forEach(day => {
-                const dateObj = new Date(day.date);
-                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
-                htmlContent += `
-        <tr>
-          <td><strong>${dayName}</strong></td>
-          <td style="text-align: center;" class="${day.lunch ? 'yes' : 'no'}">${day.lunch ? '✓ Yes' : '✗ No'}</td>
-          <td style="text-align: center;" class="${day.dinner ? 'yes' : 'no'}">${day.dinner ? '✓ Yes' : '✗ No'}</td>
-          <td style="text-align: center;" class="${day.milk ? 'yes' : 'no'}">${day.milk ? '✓ Yes' : '✗ No'}</td>
-          <td>${day.note || '-'}</td>
-        </tr>`;
-              });
-              
-              htmlContent += `
-      </tbody>
-    </table>
+        selected.forEach(sel => {
+          const { report, totals } = getReport(month, period);
+          const [y, m] = month.split('-');
+          const pName = new Date(y, m - 1).toLocaleString('default', { month: 'long' });
+          
+          let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report</title><style>body{font-family:Arial;max-width:800px;margin:40px auto;padding:20px;background:#f5f5f5}.box{background:white;border-radius:12px;padding:30px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}h1{color:#1f2937;text-align:center;border-bottom:3px solid #6366f1;padding-bottom:20px}.info{background:#eff6ff;padding:15px;border-radius:8px;margin:20px 0;border-left:4px solid #3b82f6}table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#6366f1;color:white;padding:12px;text-align:left}td{padding:10px;border-bottom:1px solid #e5e7eb}.yes{color:#059669;font-weight:600}.no{color:#dc2626}.summary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;padding:25px;border-radius:10px;margin-top:30px}.total{font-size:32px;font-weight:bold;text-align:center;margin-top:20px;padding-top:20px;border-top:2px solid rgba(255,255,255,0.3)}</style></head><body><div class="box"><h1>Delivery Report<br><small style="color:#6b7280">${pName} ${y}</small></h1>`;
 
-    <div class="summary">
-      <h2>Summary</h2>
-      <div class="summary-grid">
-        <div class="summary-item">
-          <div class="summary-label">Lunch Deliveries</div>
-          <div class="summary-value">${totals.lunch}</div>
-          <div class="summary-label">₹${rates.lunch} × ${totals.lunch} = ₹${totals.lunch * rates.lunch}</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-label">Dinner Deliveries</div>
-          <div class="summary-value">${totals.dinner}</div>
-          <div class="summary-label">₹${rates.dinner} × ${totals.dinner} = ₹${totals.dinner * rates.dinner}</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-label">Milk Deliveries</div>
-          <div class="summary-value">${totals.milk}</div>
-          <div class="summary-label">₹${rates.milk} × ${totals.milk} = ₹${totals.milk * rates.milk}</div>
-        </div>
-      </div>
-      <div class="total-amount">
-        Total Amount: ₹${(totals.lunch * rates.lunch) + (totals.dinner * rates.dinner) + (totals.milk * rates.milk)}
-      </div>
-    </div>`;
-            } else {
-              const itemName = selectedVendor.charAt(0).toUpperCase() + selectedVendor.slice(1);
-              htmlContent += `
-    <div class="vendor-info">
-      <p><strong>Item:</strong> ${itemName}</p>
-      <p><strong>Vendor:</strong> ${vendors[selectedVendor]}</p>
-      <p><strong>Rate:</strong> ₹${rates[selectedVendor]} per delivery</p>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th style="text-align: center;">Delivered</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>`;
-              
-              report.forEach(day => {
-                const dateObj = new Date(day.date);
-                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
-                htmlContent += `
-        <tr>
-          <td><strong>${dayName}</strong></td>
-          <td style="text-align: center;" class="${day[selectedVendor] ? 'yes' : 'no'}">${day[selectedVendor] ? '✓ Yes' : '✗ No'}</td>
-          <td>${day.note || '-'}</td>
-        </tr>`;
-              });
-              
-              const itemTotal = totals[selectedVendor];
-              const amount = itemTotal * rates[selectedVendor];
-              
-              htmlContent += `
-      </tbody>
-    </table>
-
-    <div class="summary">
-      <h2>Summary</h2>
-      <div class="summary-grid">
-        <div class="summary-item">
-          <div class="summary-label">Total Deliveries</div>
-          <div class="summary-value">${itemTotal}</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-label">Rate per Delivery</div>
-          <div class="summary-value">₹${rates[selectedVendor]}</div>
-        </div>
-      </div>
-      <div class="total-amount">
-        Total Amount: ₹${amount}
-      </div>
-    </div>`;
-            }
-
-            htmlContent += `
-  </div>
-</body>
-</html>`;
-            
-            const blob = new Blob([htmlContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `delivery-report-${selectedVendor}-${period}-${currentMonth}.html`;
-            a.click();
-            URL.revokeObjectURL(url);
-          } catch (error) {
-            alert('Error generating report for ' + selectedVendor);
+          if (sel === 'all') {
+            html += `<table><thead><tr><th>Date</th><th>Lunch</th><th>Dinner</th><th>Milk</th></tr></thead><tbody>`;
+            report.forEach(d => {
+              const dn = new Date(d.date).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
+              html += `<tr><td><b>${dn}</b></td><td class="${d.lunch?'yes':'no'}">${d.lunch?'✓ Yes':'✗ No'}</td><td class="${d.dinner?'yes':'no'}">${d.dinner?'✓ Yes':'✗ No'}</td><td class="${d.milk?'yes':'no'}">${d.milk?'✓ Yes':'✗ No'}</td></tr>`;
+            });
+            html += `</tbody></table><div class="summary"><h2>Summary</h2><p>Lunch: ${totals.lunch} × ₹${rates.lunch} = ₹${totals.lunch*rates.lunch}</p><p>Dinner: ${totals.dinner} × ₹${rates.dinner} = ₹${totals.dinner*rates.dinner}</p><p>Milk: ${totals.milk} × ₹${rates.milk} = ₹${totals.milk*rates.milk}</p><div class="total">Total: ₹${(totals.lunch*rates.lunch)+(totals.dinner*rates.dinner)+(totals.milk*rates.milk)}</div></div>`;
+          } else {
+            const name = sel.charAt(0).toUpperCase() + sel.slice(1);
+            html += `<div class="info"><p><b>Item:</b> ${name}</p><p><b>Vendor:</b> ${vendors[sel]}</p><p><b>Rate:</b> ₹${rates[sel]}</p></div><table><thead><tr><th>Date</th><th>Delivered</th></tr></thead><tbody>`;
+            report.forEach(d => {
+              const dn = new Date(d.date).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
+              html += `<tr><td><b>${dn}</b></td><td class="${d[sel]?'yes':'no'}">${d[sel]?'✓ Yes':'✗ No'}</td></tr>`;
+            });
+            const amt = totals[sel] * rates[sel];
+            html += `</tbody></table><div class="summary"><h2>Summary</h2><p>Total Deliveries: ${totals[sel]}</p><p>Rate: ₹${rates[sel]}</p><div class="total">Total: ₹${amt}</div></div>`;
           }
-        });
-        
-        setReportSelections({ lunch: false, dinner: false, milk: false, combined: false });
-      };
 
-      const exportBackup = () => {
-        try {
-          const backup = { deliveries, notes, rates, vendors, reminderTimes, exportDate: new Date().toISOString() };
-          const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+          html += `</div></body></html>`;
+          const blob = new Blob([html], { type: 'text/html' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `delivery-backup-${new Date().toISOString().split('T')[0]}.json`;
+          a.download = `report-${sel}-${period}-${month}.html`;
           a.click();
           URL.revokeObjectURL(url);
-        } catch (error) {
-          alert('Error creating backup.');
-        }
-      };
-
-      const importBackup = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            try {
-              const backup = JSON.parse(event.target.result);
-              if (backup.deliveries) setDeliveries(backup.deliveries);
-              if (backup.notes) setNotes(backup.notes);
-              if (backup.rates) setRates(backup.rates);
-              if (backup.vendors) setVendors(backup.vendors);
-              if (backup.reminderTimes) setReminderTimes(backup.reminderTimes);
-              alert('Backup restored successfully!');
-              e.target.value = '';
-            } catch (err) {
-              alert('Invalid backup file.');
-              e.target.value = '';
-            }
-          };
-          reader.readAsText(file);
-        }
-      };
-
-      const clearOldData = (monthsToKeep = 6) => {
-        if (!confirm(`Delete data older than ${monthsToKeep} months?`)) return;
-        
-        const cutoffDate = new Date();
-        cutoffDate.setMonth(cutoffDate.getMonth() - monthsToKeep);
-        const cutoff = cutoffDate.toISOString().split('T')[0];
-        
-        const newDeliveries = {};
-        const newNotes = {};
-        let deletedCount = 0;
-        
-        Object.keys(deliveries).forEach(date => {
-          if (date >= cutoff) {
-            newDeliveries[date] = deliveries[date];
-          } else {
-            deletedCount++;
-          }
         });
-        
-        Object.keys(notes).forEach(date => {
-          if (date >= cutoff) newNotes[date] = notes[date];
-        });
-        
-        setDeliveries(newDeliveries);
-        setNotes(newNotes);
-        alert(`Cleaned up ${deletedCount} old entries.`);
+        setSelections({ lunch: false, dinner: false, milk: false, combined: false });
       };
 
-      const weekDates = getWeekDates(selectedDate);
-      const { report, totals } = generateReport(currentMonth);
-      const totalAmount = (totals.lunch * rates.lunch) + (totals.dinner * rates.dinner) + (totals.milk * rates.milk);
+      const { report, totals } = getReport(month);
+      const total = (totals.lunch*rates.lunch) + (totals.dinner*rates.dinner) + (totals.milk*rates.milk);
       const today = new Date().toISOString().split('T')[0];
-
-      const bgClass = darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 to-indigo-100';
-      const cardClass = darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800';
-      const inputClass = darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900';
+      const bg = dark ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 to-indigo-100';
+      const card = dark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800';
 
       return (
-        <div className={`min-h-screen ${bgClass} transition-colors duration-300`}>
-          <div className={`${cardClass} shadow-lg p-4 sticky top-0 z-10`}>
+        <div className={`min-h-screen ${bg}`}>
+          <div className={`${card} shadow-lg p-4 sticky top-0 z-10`}>
             <div className="max-w-2xl mx-auto flex justify-between items-center">
               <h1 className="text-xl font-bold">Delivery Tracker</h1>
-              <div className="flex gap-2">
-                {undoStack.length > 0 && (
-                  <button onClick={undo} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <UndoIcon />
-                  </button>
-                )}
-                <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                  {darkMode ? <SunIcon /> : <MoonIcon />}
-                </button>
-              </div>
+              <button onClick={() => setDark(!dark)} className="p-2">🌙</button>
             </div>
           </div>
 
           <div className="max-w-2xl mx-auto p-4 pb-24">
-            {activeTab === 'home' && (
-              <div className={`${cardClass} rounded-2xl shadow-lg p-6`}>
-                <div className="flex gap-2 mb-4 overflow-x-auto">
-                  <button onClick={() => setViewMode('day')} className={`px-4 py-2 rounded-lg font-medium ${viewMode === 'day' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200'}`}>Day</button>
-                  <button onClick={() => setViewMode('week')} className={`px-4 py-2 rounded-lg font-medium ${viewMode === 'week' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200'}`}>Week</button>
-                  <button onClick={() => setViewMode('calendar')} className={`px-4 py-2 rounded-lg font-medium ${viewMode === 'calendar' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200'}`}>Calendar</button>
+            {tab === 'home' && (
+              <div className={`${card} rounded-2xl shadow-lg p-6`}>
+                <div className="flex gap-2 mb-4">
+                  <button onClick={() => setView('day')} className={`px-4 py-2 rounded-lg ${view==='day'?'bg-indigo-600 text-white':'bg-gray-200 text-gray-800'}`}>Day</button>
                 </div>
-
-                {viewMode === 'day' && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-4">
-                      <button onClick={() => {
-                        const d = new Date(selectedDate);
-                        d.setDate(d.getDate() - 1);
-                        setSelectedDate(d.toISOString().split('T')[0]);
-                      }} className="p-2"><LeftIcon /></button>
-                      <input type="date" value={selectedDate} max={today} onChange={(e) => setSelectedDate(e.target.value)} className={`flex-1 px-4 py-2 border rounded-lg ${inputClass}`} />
-                      <button onClick={() => {
-                        const d = new Date(selectedDate);
-                        d.setDate(d.getDate() + 1);
-                        if (d.toISOString().split('T')[0] <= today) setSelectedDate(d.toISOString().split('T')[0]);
-                      }} className="p-2"><RightIcon /></button>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      {['lunch', 'dinner', 'milk'].map(type => (
-                        <label key={type} className="flex items-center gap-3 cursor-pointer">
-                          <input type="checkbox" checked={tempDeliveries[selectedDate]?.[type] || false} onChange={() => toggleDelivery(selectedDate, type)} className="w-5 h-5 rounded" />
-                          <span className="capitalize font-medium">{type}</span>
-                          <span className="text-sm text-gray-500">({vendors[type]})</span>
-                        </label>
-                      ))}
-                    </div>
-                    
-                    {hasUnsavedChanges && (
-                      <button onClick={submitDeliveries} className="w-full mt-4 px-4 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">
-                        Submit Changes
-                      </button>
-                    )}
-                    
-                    <div className="mt-4">
-                      <label className="block text-sm font-medium mb-2">Notes</label>
-                      <textarea value={notes[selectedDate] || ''} onChange={(e) => updateNote(selectedDate, e.target.value)} placeholder="Add notes..." className={`w-full px-3 py-2 border rounded-lg ${inputClass}`} rows="2" />
-                    </div>
-                  </div>
-                )}
-
-                {viewMode === 'week' && (
-                  <div>
-                    <table className="w-full text-sm mb-2">
-                      <thead>
-                        <tr>
-                          {weekDates.map(date => (
-                            <th key={date} className="px-2 py-2 text-center">
-                              <div className="text-xs">{new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                              <div className="text-xs">{new Date(date).getDate()}</div>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {['lunch', 'dinner', 'milk'].map(type => (
-                          <tr key={type}>
-                            {weekDates.map(date => (
-                              <td key={date} className="px-2 py-2 text-center">
-                                <input type="checkbox" checked={deliveries[date]?.[type] || false} onChange={() => {
-                                  saveToUndoStack();
-                                  toggleDelivery(date, type);
-                                  setDeliveries(tempDeliveries);
-                                }} className="w-4 h-4" />
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <div className="flex justify-between text-xs font-medium">
-                      <span>Lunch</span>
-                      <span>Dinner</span>
-                      <span>Milk</span>
-                    </div>
-                  </div>
-                )}
-
-                {viewMode === 'calendar' && (
-                  <div className="grid grid-cols-7 gap-1">
-                    {Array.from({ length: getDaysInMonth(currentMonth) }, (_, i) => {
-                      const date = `${currentMonth}-${String(i + 1).padStart(2, '0')}`;
-                      const data = deliveries[date] || {};
-                      return (
-                        <div key={date} onClick={() => { setSelectedDate(date); setViewMode('day'); }} className={`p-2 border rounded cursor-pointer text-center ${selectedDate === date ? 'bg-indigo-600 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
-                          <div className="text-xs font-bold">{i + 1}</div>
-                          <div className="flex justify-center gap-1 mt-1">
-                            {data.lunch && <div className="w-1 h-1 bg-green-500 rounded-full"></div>}
-                            {data.dinner && <div className="w-1 h-1 bg-blue-500 rounded-full"></div>}
-                            {data.milk && <div className="w-1 h-1 bg-yellow-500 rounded-full"></div>}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                <input type="date" value={date} max={today} onChange={(e) => setDate(e.target.value)} className="w-full px-4 py-2 border rounded-lg mb-4" />
+                <div className="space-y-3">
+                  {['lunch','dinner','milk'].map(t => (
+                    <label key={t} className="flex items-center gap-3 cursor-pointer">
+                      <input type="checkbox" checked={temp[date]?.[t]||false} onChange={() => toggle(date,t)} className="w-5 h-5" />
+                      <span className="capitalize font-medium">{t}</span>
+                      <span className="text-sm text-gray-500">({vendors[t]})</span>
+                    </label>
+                  ))}
+                </div>
+                {changed && (
+                  <button onClick={submit} className="w-full mt-4 px-4 py-3 bg-indigo-600 text-white rounded-lg font-semibold">Submit</button>
                 )}
               </div>
             )}
 
-            {activeTab === 'reports' && (
-              <div className={`${cardClass} rounded-2xl shadow-lg p-6`}>
+            {tab === 'reports' && (
+              <div className={`${card} rounded-2xl shadow-lg p-6`}>
                 <h2 className="text-xl font-bold mb-4">Reports</h2>
-                
-                <input type="month" value={currentMonth} max={new Date().toISOString().slice(0, 7)} onChange={(e) => setCurrentMonth(e.target.value)} className={`w-full px-4 py-2 border rounded-lg mb-4 ${inputClass}`} />
-
+                <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-full px-4 py-2 border rounded-lg mb-4" />
                 <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-4 mb-6 text-white">
                   <div className="grid grid-cols-3 gap-2 mb-3 text-sm">
                     <div><div className="font-semibold">Lunch</div><div>{totals.lunch} × ₹{rates.lunch}</div></div>
                     <div><div className="font-semibold">Dinner</div><div>{totals.dinner} × ₹{rates.dinner}</div></div>
                     <div><div className="font-semibold">Milk</div><div>{totals.milk} × ₹{rates.milk}</div></div>
                   </div>
-                  <div className="text-2xl font-bold border-t border-white/30 pt-3">Total: ₹{totalAmount}</div>
+                  <div className="text-2xl font-bold border-t border-white/30 pt-3">Total: ₹{total}</div>
                 </div>
-
                 <div className="border rounded-xl p-4 mb-4">
-                  <h3 className="font-semibold mb-3">Select Reports to Generate:</h3>
-                  
+                  <h3 className="font-semibold mb-3">Select Reports:</h3>
                   <div className="space-y-2 mb-4">
-                    <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
-                      <input 
-                        type="checkbox" 
-                        checked={reportSelections.lunch} 
-                        onChange={(e) => setReportSelections({...reportSelections, lunch: e.target.checked, combined: false})}
-                        className="w-5 h-5 rounded"
-                      />
-                      <div>
-                        <div className="font-medium">Lunch</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">{vendors.lunch}</div>
-                      </div>
+                    <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                      <input type="checkbox" checked={selections.lunch} onChange={(e) => setSelections({...selections,lunch:e.target.checked,combined:false})} className="w-5 h-5" />
+                      <div><div className="font-medium">Lunch</div><div className="text-sm text-gray-600">{vendors.lunch}</div></div>
                     </label>
-                    
-                    <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
-                      <input 
-                        type="checkbox" 
-                        checked={reportSelections.dinner} 
-                        onChange={(e) => setReportSelections({...reportSelections, dinner: e.target.checked, combined: false})}
-                        className="w-5 h-5 rounded"
-                      />
-                      <div>
-                        <div className="font-medium">Dinner</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">{vendors.dinner}</div>
-                      </div>
+                    <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                      <input type="checkbox" checked={selections.dinner} onChange={(e) => setSelections({...selections,dinner:e.target.checked,combined:false})} className="w-5 h-5" />
+                      <div><div className="font-medium">Dinner</div><div className="text-sm text-gray-600">{vendors.dinner}</div></div>
                     </label>
-                    
-                    <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
-                      <input 
-                        type="checkbox" 
-                        checked={reportSelections.milk} 
-                        onChange={(e) => setReportSelections({...reportSelections, milk: e.target.checked, combined: false})}
-                        className="w-5 h-5 rounded"
-                      />
-                      <div>
-                        <div className="font-medium">Milk</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">{vendors.milk}</div>
-                      </div>
+                    <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                      <input type="checkbox" checked={selections.milk} onChange={(e) => setSelections({...selections,milk:e.target.checked,combined:false})} className="w-5 h-5" />
+                      <div><div className="font-medium">Milk</div><div className="text-sm text-gray-600">{vendors.milk}</div></div>
                     </label>
-
-                    <div className="border-t pt-2 mt-2">
-                      <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
-                        <input 
-                          type="checkbox" 
-                          checked={reportSelections.combined} 
-                          onChange={(e) => setReportSelections({lunch: false, dinner: false, milk: false, combined: e.target.checked})}
-                          className="w-5 h-5 rounded"
-                        />
-                        <div>
-                          <div className="font-medium">Combined Report (All 3)</div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">Single report with all deliveries</div>
-                        </div>
+                    <div className="border-t pt-2">
+                      <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" checked={selections.combined} onChange={(e) => setSelections({lunch:false,dinner:false,milk:false,combined:e.target.checked})} className="w-5 h-5" />
+                        <div><div className="font-medium">Combined (All 3)</div><div className="text-sm text-gray-600">Single report</div></div>
                       </label>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <button onClick={() => downloadReport('week')} className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">Week</button>
-                    <button onClick={() => downloadReport('month')} className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">Month</button>
-                    <button onClick={() => downloadReport('quarter')} className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">Quarter</button>
-                  </div>
+                  <button onClick={() => download('month')} className="w-full px-3 py-2 bg-indigo-600 text-white rounded-lg font-medium">Generate Month Report</button>
                 </div>
               </div>
             )}
 
-            {activeTab === 'analytics' && (
-              <div className={`${cardClass} rounded-2xl shadow-lg p-6`}>
-                <h2 className="text-xl font-bold mb-4">Analytics - Delivery History</h2>
-                
-                <input type="month" value={currentMonth} max={new Date().toISOString().slice(0, 7)} onChange={(e) => setCurrentMonth(e.target.value)} className={`w-full px-4 py-2 border rounded-lg mb-4 ${inputClass}`} />
-
-                <div className="overflow-x-auto max-h-96 overflow-y-auto">
-                  <table className="w-full text-sm">
-                    <thead className="sticky top-0 bg-gray-100 dark:bg-gray-700">
-                      <tr>
-                        <th className="text-left py-2 px-2">Date</th>
-                        <th className="text-center py-2 px-1">Lunch</th>
-                        <th className="text-center py-2 px-1">Dinner</th>
-                        <th className="text-center py-2 px-1">Milk</th>
+            {tab === 'analytics' && (
+              <div className={`${card} rounded-2xl shadow-lg p-6`}>
+                <h2 className="text-xl font-bold mb-4">Analytics</h2>
+                <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-full px-4 py-2 border rounded-lg mb-4" />
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-100">
+                    <tr><th className="text-left py-2 px-2">Date</th><th className="text-center py-2">L</th><th className="text-center py-2">D</th><th className="text-center py-2">M</th></tr>
+                  </thead>
+                  <tbody>
+                    {report.map(d => (
+                      <tr key={d.date} className="border-b">
+                        <td className="py-2 px-2">{new Date(d.date).toLocaleDateString('en-US',{day:'2-digit',month:'short'})}</td>
+                        <td className="text-center">{d.lunch?<CheckIcon/>:'-'}</td>
+                        <td className="text-center">{d.dinner?<CheckIcon/>:'-'}</td>
+                        <td className="text-center">{d.milk?<CheckIcon/>:'-'}</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {report.map(day => (
-                        <tr key={day.date} className="border-b dark:border-gray-700">
-                          <td className="py-2 px-2">{new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' })}</td>
-                          <td className="text-center py-2 px-1">{day.lunch ? <CheckIcon /> : '-'}</td>
-                          <td className="text-center py-2 px-1">{day.dinner ? <CheckIcon /> : '-'}</td>
-                          <td className="text-center py-2 px-1">{day.milk ? <CheckIcon /> : '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="mt-4 grid grid-cols-3 gap-4">
-                  <div className="p-4 bg-orange-100 dark:bg-orange-900 rounded-lg">
-                    <div className="text-2xl font-bold">{totals.lunch}</div>
-                    <div className="text-sm">Lunch</div>
-                  </div>
-                  <div className="p-4 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                    <div className="text-2xl font-bold">{totals.dinner}</div>
-                    <div className="text-sm">Dinner</div>
-                  </div>
-                  <div className="p-4 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-                    <div className="text-2xl font-bold">{totals.milk}</div>
-                    <div className="text-sm">Milk</div>
-                  </div>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
 
-            {activeTab === 'settings' && (
-              <div className={`${cardClass} rounded-2xl shadow-lg p-6`}>
+            {tab === 'settings' && (
+              <div className={`${card} rounded-2xl shadow-lg p-6`}>
                 <h2 className="text-xl font-bold mb-4">Settings</h2>
-                
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div>
-                    <h3 className="font-semibold mb-3">Delivery Rates (₹)</h3>
-                    {['lunch', 'dinner', 'milk'].map(type => (
-                      <div key={type} className="flex justify-between items-center mb-2">
-                        <label className="capitalize">{type}</label>
-                        <input type="number" value={rates[type]} onChange={(e) => updateRate(type, e.target.value)} className={`w-24 px-3 py-2 border rounded-lg ${inputClass}`} />
+                    <h3 className="font-semibold mb-2">Rates (₹)</h3>
+                    {['lunch','dinner','milk'].map(t => (
+                      <div key={t} className="flex justify-between mb-2">
+                        <label className="capitalize">{t}</label>
+                        <input type="number" value={rates[t]} onChange={(e) => {setRates({...rates,[t]:Number(e.target.value)});setSettingsChanged(true)}} className="w-24 px-2 py-1 border rounded" />
                       </div>
                     ))}
                   </div>
-
                   <div>
-                    <h3 className="font-semibold mb-3">Vendors</h3>
-                    {['lunch', 'dinner', 'milk'].map(type => (
-                      <div key={type} className="flex justify-between items-center mb-2">
-                        <label className="capitalize">{type}</label>
-                        <input type="text" value={vendors[type]} onChange={(e) => updateVendor(type, e.target.value)} className={`w-40 px-3 py-2 border rounded-lg ${inputClass}`} />
+                    <h3 className="font-semibold mb-2">Vendors</h3>
+                    {['lunch','dinner','milk'].map(t => (
+                      <div key={t} className="flex justify-between mb-2">
+                        <label className="capitalize">{t}</label>
+                        <input type="text" value={vendors[t]} onChange={(e) => {setVendors({...vendors,[t]:e.target.value});setSettingsChanged(true)}} className="w-40 px-2 py-1 border rounded" />
                       </div>
                     ))}
                   </div>
-
-                  <div>
-                    <h3 className="font-semibold mb-3">Reminder Times</h3>
-                    {['lunch', 'dinner', 'milk'].map(type => (
-                      <div key={type} className="flex justify-between items-center mb-2">
-                        <label className="capitalize">{type}</label>
-                        <input type="time" value={reminderTimes[type]} onChange={(e) => updateReminderTime(type, e.target.value)} className={`w-32 px-3 py-2 border rounded-lg ${inputClass}`} />
-                      </div>
-                    ))}
-                  </div>
-
                   {settingsChanged && (
-                    <button onClick={saveSettings} className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">
-                      Update Settings
-                    </button>
+                    <button onClick={saveSettings} className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold">Update Settings</button>
                   )}
-
-                  <div>
-                    <h3 className="font-semibold mb-3">Backup & Restore</h3>
-                    <div className="space-y-2">
-                      <button onClick={exportBackup} className="w-full px-4 py-2 bg-green-600 text-white rounded-lg flex items-center justify-center gap-2">
-                        <DownloadIcon /> Export Backup
-                      </button>
-                      <label className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2 cursor-pointer">
-                        <UploadIcon /> Import Backup
-                        <input type="file" accept=".json" onChange={importBackup} className="hidden" />
-                      </label>
-                      <button onClick={() => clearOldData(6)} className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg">
-                        Clear Data Older Than 6 Months
-                      </button>
-                    </div>
-                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                      Total entries: {Object.keys(deliveries).length} days tracked
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          <div className={`${cardClass} fixed bottom-0 left-0 right-0 shadow-lg border-t dark:border-gray-700`}>
+          <div className={`${card} fixed bottom-0 left-0 right-0 shadow-lg border-t`}>
             <div className="max-w-2xl mx-auto flex justify-around py-2">
-              <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center p-2 ${activeTab === 'home' ? 'text-indigo-600' : 'text-gray-500'}`}>
-                <HomeIcon />
-                <span className="text-xs mt-1">Home</span>
-              </button>
-              <button onClick={() => setActiveTab('reports')} className={`flex flex-col items-center p-2 ${activeTab === 'reports' ? 'text-indigo-600' : 'text-gray-500'}`}>
-                <FileIcon />
-                <span className="text-xs mt-1">Reports</span>
-              </button>
-              <button onClick={() => setActiveTab('analytics')} className={`flex flex-col items-center p-2 ${activeTab === 'analytics' ? 'text-indigo-600' : 'text-gray-500'}`}>
-                <ChartIcon />
-                <span className="text-xs mt-1">Analytics</span>
-              </button>
-              <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center p-2 ${activeTab === 'settings' ? 'text-indigo-600' : 'text-gray-500'}`}>
-                <SettingsIcon />
-                <span className="text-xs mt-1">Settings</span>
-              </button>
+              <button onClick={() => setTab('home')} className={`flex flex-col items-center p-2 ${tab==='home'?'text-indigo-600':'text-gray-500'}`}><HomeIcon /><span className="text-xs mt-1">Home</span></button>
+              <button onClick={() => setTab('reports')} className={`flex flex-col items-center p-2 ${tab==='reports'?'text-indigo-600':'text-gray-500'}`}><FileIcon /><span className="text-xs mt-1">Reports</span></button>
+              <button onClick={() => setTab('analytics')} className={`flex flex-col items-center p-2 ${tab==='analytics'?'text-indigo-600':'text-gray-500'}`}><ChartIcon /><span className="text-xs mt-1">Analytics</span></button>
+              <button onClick={() => setTab('settings')} className={`flex flex-col items-center p-2 ${tab==='settings'?'text-indigo-600':'text-gray-500'}`}><SettingsIcon /><span className="text-xs mt-1">Settings</span></button>
             </div>
           </div>
         </div>
       );
     }
 
-    ReactDOM.render(<DeliveryTracker />, document.getElementById('root'));
+    ReactDOM.render(<App />, document.getElementById('root'));
   </script>
 </body>
 </html>
