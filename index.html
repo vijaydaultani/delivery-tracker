@@ -38,17 +38,89 @@
       const [temp, setTemp] = useState({});
 
       useEffect(() => {
-        const saved = localStorage.getItem('deliveryData');
-        if (saved) {
-          const data = JSON.parse(saved);
-          setDeliveries(data.deliveries || {});
-          setRates(data.rates || { lunch: 100, dinner: 150, milk: 16 });
-          setVendors(data.vendors || { lunch: 'Poonam Bhabhi', dinner: 'Neetu Bhabhi', milk: 'Vishal Bhaiya' });
+        // Try multiple storage locations for recovery
+        let recovered = false;
+        
+        // Try primary localStorage
+        try {
+          const saved = localStorage.getItem('deliveryData');
+          if (saved) {
+            const data = JSON.parse(saved);
+            if (data.deliveries && Object.keys(data.deliveries).length > 0) {
+              setDeliveries(data.deliveries);
+              setRates(data.rates || { lunch: 100, dinner: 150, milk: 16 });
+              setVendors(data.vendors || { lunch: 'Poonam Bhabhi', dinner: 'Neetu Bhabhi', milk: 'Vishal Bhaiya' });
+              recovered = true;
+              console.log('Data loaded from primary storage');
+            }
+          }
+        } catch (e) {
+          console.error('Primary load failed:', e);
+        }
+
+        // Try backup localStorage
+        if (!recovered) {
+          try {
+            const backup = localStorage.getItem('deliveryDataBackup');
+            if (backup) {
+              const data = JSON.parse(backup);
+              if (data.deliveries && Object.keys(data.deliveries).length > 0) {
+                setDeliveries(data.deliveries);
+                setRates(data.rates || { lunch: 100, dinner: 150, milk: 16 });
+                setVendors(data.vendors || { lunch: 'Poonam Bhabhi', dinner: 'Neetu Bhabhi', milk: 'Vishal Bhaiya' });
+                recovered = true;
+                console.log('Data loaded from backup storage');
+                alert('Data recovered from backup!');
+              }
+            }
+          } catch (e) {
+            console.error('Backup load failed:', e);
+          }
+        }
+
+        if (!recovered) {
+          console.log('No existing data found - starting fresh');
         }
       }, []);
 
       useEffect(() => {
-        localStorage.setItem('deliveryData', JSON.stringify({ deliveries, rates, vendors }));
+        // Save to multiple locations for redundancy
+        const data = { 
+          deliveries, 
+          rates, 
+          vendors, 
+          timestamp: Date.now(),
+          itemCount: Object.keys(deliveries).length 
+        };
+        
+        // Save to primary localStorage with error handling
+        try {
+          localStorage.setItem('deliveryData', JSON.stringify(data));
+        } catch (e) {
+          console.error('Primary save failed:', e);
+          if (e.name === 'QuotaExceededError') {
+            alert('Storage almost full! Please export backup and clear old data.');
+          }
+        }
+        
+        // Save to backup localStorage
+        try {
+          localStorage.setItem('deliveryDataBackup', JSON.stringify(data));
+        } catch (e) {
+          console.error('Backup save failed:', e);
+        }
+
+        // Save to sessionStorage (temporary but helps during browser session)
+        try {
+          sessionStorage.setItem('deliveryDataSession', JSON.stringify(data));
+        } catch (e) {
+          console.error('Session save failed:', e);
+        }
+
+        // Log save confirmation
+        if (Object.keys(deliveries).length > 0) {
+          console.log(`Data saved: ${Object.keys(deliveries).length} days tracked`);
+        }
       }, [deliveries, rates, vendors]);
 
       useEffect(() => {
@@ -245,6 +317,55 @@
             {tab === 'settings' && (
               <div className={`${card} rounded-2xl shadow-lg p-6`}>
                 <h2 className="text-xl font-bold mb-4">Settings</h2>
+                
+                {/* Data Recovery Section */}
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                  <h3 className="font-semibold text-yellow-800 mb-2">🔍 Data Recovery Tool</h3>
+                  <p className="text-sm text-yellow-700 mb-3">Lost your delivery data? Click below to check all storage locations.</p>
+                  <button 
+                    onClick={() => {
+                      let found = [];
+                      try {
+                        const keys = Object.keys(localStorage);
+                        keys.forEach(key => {
+                          if (key.includes('delivery') || key.includes('Delivery')) {
+                            const val = localStorage.getItem(key);
+                            if (val) {
+                              try {
+                                const parsed = JSON.parse(val);
+                                if (parsed.deliveries) {
+                                  const count = Object.keys(parsed.deliveries).length;
+                                  found.push(`${key}: ${count} days`);
+                                }
+                              } catch(e) {}
+                            }
+                          }
+                        });
+                        
+                        if (found.length > 0) {
+                          alert('Found data in storage:\\n\\n' + found.join('\\n') + '\\n\\nTrying to recover...');
+                          
+                          // Try to recover from backup
+                          const backup = localStorage.getItem('deliveryDataBackup');
+                          if (backup) {
+                            const data = JSON.parse(backup);
+                            setDeliveries(data.deliveries || {});
+                            alert('Data recovered from backup!');
+                            window.location.reload();
+                          }
+                        } else {
+                          alert('No data found in any storage location. Data may be permanently lost.\\n\\nTo prevent this in the future:\\n1. Export backups weekly\\n2. Keep the app added to Home Screen\\n3. Don\\'t clear Safari data');
+                        }
+                      } catch(e) {
+                        alert('Recovery failed: ' + e.message);
+                      }
+                    }}
+                    className="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg font-medium"
+                  >
+                    Try Data Recovery
+                  </button>
+                </div>
+
                 <div className="space-y-4">
                   <div>
                     <h3 className="font-semibold mb-2">Rates (₹)</h3>
@@ -267,6 +388,56 @@
                   {settingsChanged && (
                     <button onClick={saveSettings} className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold">Update Settings</button>
                   )}
+                  
+                  <div className="border-t pt-4 mt-4">
+                    <h3 className="font-semibold mb-2">Backup & Restore</h3>
+                    <p className="text-sm text-gray-600 mb-3">Current data: {Object.keys(deliveries).length} days tracked</p>
+                    <div className="space-y-2">
+                      <button 
+                        onClick={() => {
+                          const backup = { deliveries, rates, vendors, exportDate: new Date().toISOString() };
+                          const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `delivery-backup-${new Date().toISOString().split('T')[0]}.json`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="w-full px-4 py-2 bg-green-600 text-white rounded-lg"
+                      >
+                        📥 Export Backup
+                      </button>
+                      <label className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center cursor-pointer">
+                        📤 Import Backup
+                        <input 
+                          type="file" 
+                          accept=".json" 
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                try {
+                                  const backup = JSON.parse(event.target.result);
+                                  if (backup.deliveries) setDeliveries(backup.deliveries);
+                                  if (backup.rates) setRates(backup.rates);
+                                  if (backup.vendors) setVendors(backup.vendors);
+                                  alert('Backup restored successfully!');
+                                  e.target.value = '';
+                                } catch (err) {
+                                  alert('Invalid backup file.');
+                                  e.target.value = '';
+                                }
+                              };
+                              reader.readAsText(file);
+                            }
+                          }}
+                          className="hidden" 
+                        />
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
