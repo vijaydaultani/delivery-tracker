@@ -3,459 +3,866 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Delivery Tracker</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Delivery Tracker Pro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    .header { 
+      background: white; 
+      padding: 15px 20px; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { font-size: 20px; color: #1f2937; }
+    .status { 
+      font-size: 11px; 
+      padding: 4px 8px; 
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .status.online { background: #d1fae5; color: #065f46; }
+    .status.offline { background: #fee2e2; color: #991b1b; }
+    .container { max-width: 600px; margin: 20px auto; padding: 0 20px; }
+    .card { 
+      background: white; 
+      border-radius: 16px; 
+      padding: 20px; 
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    .card h2 { font-size: 18px; margin-bottom: 15px; color: #1f2937; }
+    .input-group { margin-bottom: 12px; }
+    .input-group label { 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      padding: 14px;
+      background: #f9fafb;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .input-group label:hover { background: #f3f4f6; }
+    .input-group input[type="checkbox"] { 
+      width: 22px; 
+      height: 22px; 
+      cursor: pointer;
+    }
+    .input-group span { font-size: 15px; font-weight: 500; }
+    input[type="date"], input[type="month"], input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 15px;
+      margin-bottom: 10px;
+      transition: border 0.2s;
+    }
+    input:focus { outline: none; border-color: #667eea; }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: #667eea; color: white; }
+    .btn-success { background: #10b981; color: white; }
+    .btn-warning { background: #f59e0b; color: white; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-secondary { background: #6b7280; color: white; }
+    .summary { 
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 15px 0;
+    }
+    .summary h3 { margin-bottom: 12px; font-size: 16px; }
+    .summary .total { font-size: 28px; font-weight: bold; margin-top: 15px; text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+    th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f3f4f6; font-weight: 600; font-size: 13px; }
+    .nav { 
+      position: fixed; 
+      bottom: 0; 
+      left: 0; 
+      right: 0; 
+      background: white; 
+      display: flex; 
+      justify-content: space-around;
+      padding: 8px 0;
+      box-shadow: 0 -2px 15px rgba(0,0,0,0.1);
+    }
+    .nav button {
+      background: none;
+      border: none;
+      padding: 8px 15px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #6b7280;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .nav button.active { color: #667eea; background: #eef2ff; }
+    .hidden { display: none; }
+    .alert { 
+      background: #fef3c7; 
+      border-left: 4px solid #f59e0b;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .alert.success { background: #d1fae5; border-color: #10b981; }
+    .alert.error { background: #fee2e2; border-color: #ef4444; }
+    .settings-row { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    .stats { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      gap: 10px; 
+      margin: 15px 0;
+    }
+    .stat-card { 
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .stat-value { font-size: 24px; font-weight: bold; }
+    .stat-label { font-size: 11px; opacity: 0.9; margin-top: 4px; }
+    .date-nav {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .date-nav button {
+      padding: 10px 15px;
+      border: 2px solid #e5e7eb;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .date-nav button:hover { background: #f3f4f6; }
+    .date-nav input { flex: 1; }
+    .save-indicator {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      background: #10b981;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .save-indicator.show { opacity: 1; }
+  </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useEffect } = React;
+  <div class="header">
+    <h1>🚚 Delivery Tracker Pro</h1>
+    <span class="status online" id="statusIndicator">● Online</span>
+  </div>
 
-    const HomeIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
-    const FileIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
-    const ChartIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
-    const SettingsIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
-    const CheckIcon = () => <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>;
-    const DownloadIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>;
+  <div class="save-indicator" id="saveIndicator">✓ Auto-saved</div>
 
-    function App() {
-      const [tab, setTab] = useState('home');
-      const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-      const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
-      const [view, setView] = useState('day');
-      const [dark, setDark] = useState(false);
-      const [changed, setChanged] = useState(false);
-      const [settingsChanged, setSettingsChanged] = useState(false);
-      
-      const [rates, setRates] = useState({ lunch: 100, dinner: 150, milk: 16 });
-      const [vendors, setVendors] = useState({ lunch: 'Poonam Bhabhi', dinner: 'Neetu Bhabhi', milk: 'Vishal Bhaiya' });
-      const [selections, setSelections] = useState({ lunch: false, dinner: false, milk: false, combined: false });
-      
-      const [deliveries, setDeliveries] = useState({});
-      const [temp, setTemp] = useState({});
-
-      useEffect(() => {
-        // Try multiple storage locations for recovery
-        let recovered = false;
-        
-        // Try primary localStorage
-        try {
-          const saved = localStorage.getItem('deliveryData');
-          if (saved) {
-            const data = JSON.parse(saved);
-            if (data.deliveries && Object.keys(data.deliveries).length > 0) {
-              setDeliveries(data.deliveries);
-              setRates(data.rates || { lunch: 100, dinner: 150, milk: 16 });
-              setVendors(data.vendors || { lunch: 'Poonam Bhabhi', dinner: 'Neetu Bhabhi', milk: 'Vishal Bhaiya' });
-              recovered = true;
-              console.log('Data loaded from primary storage');
-            }
-          }
-        } catch (e) {
-          console.error('Primary load failed:', e);
-        }
-
-        // Try backup localStorage
-        if (!recovered) {
-          try {
-            const backup = localStorage.getItem('deliveryDataBackup');
-            if (backup) {
-              const data = JSON.parse(backup);
-              if (data.deliveries && Object.keys(data.deliveries).length > 0) {
-                setDeliveries(data.deliveries);
-                setRates(data.rates || { lunch: 100, dinner: 150, milk: 16 });
-                setVendors(data.vendors || { lunch: 'Poonam Bhabhi', dinner: 'Neetu Bhabhi', milk: 'Vishal Bhaiya' });
-                recovered = true;
-                console.log('Data loaded from backup storage');
-                alert('Data recovered from backup!');
-              }
-            }
-          } catch (e) {
-            console.error('Backup load failed:', e);
-          }
-        }
-
-        if (!recovered) {
-          console.log('No existing data found - starting fresh');
-        }
-      }, []);
-
-      useEffect(() => {
-        // Save to multiple locations for redundancy
-        const data = { 
-          deliveries, 
-          rates, 
-          vendors, 
-          timestamp: Date.now(),
-          itemCount: Object.keys(deliveries).length 
-        };
-        
-        // Save to primary localStorage with error handling
-        try {
-          localStorage.setItem('deliveryData', JSON.stringify(data));
-        } catch (e) {
-          console.error('Primary save failed:', e);
-          if (e.name === 'QuotaExceededError') {
-            alert('Storage almost full! Please export backup and clear old data.');
-          }
-        }
-        
-        // Save to backup localStorage
-        try {
-          localStorage.setItem('deliveryDataBackup', JSON.stringify(data));
-        } catch (e) {
-          console.error('Backup save failed:', e);
-        }
-
-        // Save to sessionStorage (temporary but helps during browser session)
-        try {
-          sessionStorage.setItem('deliveryDataSession', JSON.stringify(data));
-        } catch (e) {
-          console.error('Session save failed:', e);
-        }
-
-        // Log save confirmation
-        if (Object.keys(deliveries).length > 0) {
-          console.log(`Data saved: ${Object.keys(deliveries).length} days tracked`);
-        }
-      }, [deliveries, rates, vendors]);
-
-      useEffect(() => {
-        setTemp(deliveries);
-        setChanged(false);
-      }, [date, view]);
-
-      const toggle = (d, type) => {
-        setTemp(prev => ({ ...prev, [d]: { ...prev[d], [type]: !prev[d]?.[type] } }));
-        setChanged(true);
-      };
-
-      const submit = () => {
-        setDeliveries(temp);
-        setChanged(false);
-        alert('Saved!');
-      };
-
-      const saveSettings = () => {
-        setSettingsChanged(false);
-        alert('Settings saved!');
-      };
-
-      const getDays = (ym) => {
-        const [y, m] = ym.split('-').map(Number);
-        return new Date(y, m, 0).getDate();
-      };
-
-      const getReport = (ym, period = 'month') => {
-        let dates = [];
-        if (period === 'month') {
-          const days = getDays(ym);
-          for (let d = 1; d <= days; d++) {
-            dates.push(`${ym}-${String(d).padStart(2, '0')}`);
-          }
-        }
-        const report = [];
-        let totals = { lunch: 0, dinner: 0, milk: 0 };
-        dates.forEach(dt => {
-          const day = deliveries[dt] || {};
-          report.push({ date: dt, lunch: day.lunch || false, dinner: day.dinner || false, milk: day.milk || false });
-          if (day.lunch) totals.lunch++;
-          if (day.dinner) totals.dinner++;
-          if (day.milk) totals.milk++;
-        });
-        return { report, totals };
-      };
-
-      const download = (period) => {
-        const selected = [];
-        if (selections.combined) selected.push('all');
-        else {
-          if (selections.lunch) selected.push('lunch');
-          if (selections.dinner) selected.push('dinner');
-          if (selections.milk) selected.push('milk');
-        }
-        if (selected.length === 0) { alert('Select a report'); return; }
-
-        selected.forEach(sel => {
-          const { report, totals } = getReport(month, period);
-          const [y, m] = month.split('-');
-          const pName = new Date(y, m - 1).toLocaleString('default', { month: 'long' });
-          
-          let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report</title><style>body{font-family:Arial;max-width:800px;margin:40px auto;padding:20px;background:#f5f5f5}.box{background:white;border-radius:12px;padding:30px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}h1{color:#1f2937;text-align:center;border-bottom:3px solid #6366f1;padding-bottom:20px}.info{background:#eff6ff;padding:15px;border-radius:8px;margin:20px 0;border-left:4px solid #3b82f6}table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#6366f1;color:white;padding:12px;text-align:left}td{padding:10px;border-bottom:1px solid #e5e7eb}.yes{color:#059669;font-weight:600}.no{color:#dc2626}.summary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;padding:25px;border-radius:10px;margin-top:30px}.total{font-size:32px;font-weight:bold;text-align:center;margin-top:20px;padding-top:20px;border-top:2px solid rgba(255,255,255,0.3)}</style></head><body><div class="box"><h1>Delivery Report<br><small style="color:#6b7280">${pName} ${y}</small></h1>`;
-
-          if (sel === 'all') {
-            html += `<table><thead><tr><th>Date</th><th>Lunch</th><th>Dinner</th><th>Milk</th></tr></thead><tbody>`;
-            report.forEach(d => {
-              const dn = new Date(d.date).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
-              html += `<tr><td><b>${dn}</b></td><td class="${d.lunch?'yes':'no'}">${d.lunch?'✓ Yes':'✗ No'}</td><td class="${d.dinner?'yes':'no'}">${d.dinner?'✓ Yes':'✗ No'}</td><td class="${d.milk?'yes':'no'}">${d.milk?'✓ Yes':'✗ No'}</td></tr>`;
-            });
-            html += `</tbody></table><div class="summary"><h2>Summary</h2><p>Lunch: ${totals.lunch} × ₹${rates.lunch} = ₹${totals.lunch*rates.lunch}</p><p>Dinner: ${totals.dinner} × ₹${rates.dinner} = ₹${totals.dinner*rates.dinner}</p><p>Milk: ${totals.milk} × ₹${rates.milk} = ₹${totals.milk*rates.milk}</p><div class="total">Total: ₹${(totals.lunch*rates.lunch)+(totals.dinner*rates.dinner)+(totals.milk*rates.milk)}</div></div>`;
-          } else {
-            const name = sel.charAt(0).toUpperCase() + sel.slice(1);
-            html += `<div class="info"><p><b>Item:</b> ${name}</p><p><b>Vendor:</b> ${vendors[sel]}</p><p><b>Rate:</b> ₹${rates[sel]}</p></div><table><thead><tr><th>Date</th><th>Delivered</th></tr></thead><tbody>`;
-            report.forEach(d => {
-              const dn = new Date(d.date).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
-              html += `<tr><td><b>${dn}</b></td><td class="${d[sel]?'yes':'no'}">${d[sel]?'✓ Yes':'✗ No'}</td></tr>`;
-            });
-            const amt = totals[sel] * rates[sel];
-            html += `</tbody></table><div class="summary"><h2>Summary</h2><p>Total Deliveries: ${totals[sel]}</p><p>Rate: ₹${rates[sel]}</p><div class="total">Total: ₹${amt}</div></div>`;
-          }
-
-          html += `</div></body></html>`;
-          const blob = new Blob([html], { type: 'text/html' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `report-${sel}-${period}-${month}.html`;
-          a.click();
-          URL.revokeObjectURL(url);
-        });
-        setSelections({ lunch: false, dinner: false, milk: false, combined: false });
-      };
-
-      const { report, totals } = getReport(month);
-      const total = (totals.lunch*rates.lunch) + (totals.dinner*rates.dinner) + (totals.milk*rates.milk);
-      const today = new Date().toISOString().split('T')[0];
-      const bg = dark ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 to-indigo-100';
-      const card = dark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800';
-
-      return (
-        <div className={`min-h-screen ${bg}`}>
-          <div className={`${card} shadow-lg p-4 sticky top-0 z-10`}>
-            <div className="max-w-2xl mx-auto flex justify-between items-center">
-              <h1 className="text-xl font-bold">Delivery Tracker</h1>
-              <button onClick={() => setDark(!dark)} className="p-2">🌙</button>
-            </div>
+  <div class="container">
+    <!-- Home Tab -->
+    <div id="homeTab" class="tab-content">
+      <div class="card">
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-value" id="totalDays">0</div>
+            <div class="stat-label">Days Tracked</div>
           </div>
-
-          <div className="max-w-2xl mx-auto p-4 pb-24">
-            {tab === 'home' && (
-              <div className={`${card} rounded-2xl shadow-lg p-6`}>
-                <div className="flex gap-2 mb-4">
-                  <button onClick={() => setView('day')} className={`px-4 py-2 rounded-lg ${view==='day'?'bg-indigo-600 text-white':'bg-gray-200 text-gray-800'}`}>Day</button>
-                </div>
-                <input type="date" value={date} max={today} onChange={(e) => setDate(e.target.value)} className="w-full px-4 py-2 border rounded-lg mb-4" />
-                <div className="space-y-3">
-                  {['lunch','dinner','milk'].map(t => (
-                    <label key={t} className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={temp[date]?.[t]||false} onChange={() => toggle(date,t)} className="w-5 h-5" />
-                      <span className="capitalize font-medium">{t}</span>
-                      <span className="text-sm text-gray-500">({vendors[t]})</span>
-                    </label>
-                  ))}
-                </div>
-                {changed && (
-                  <button onClick={submit} className="w-full mt-4 px-4 py-3 bg-indigo-600 text-white rounded-lg font-semibold">Submit</button>
-                )}
-              </div>
-            )}
-
-            {tab === 'reports' && (
-              <div className={`${card} rounded-2xl shadow-lg p-6`}>
-                <h2 className="text-xl font-bold mb-4">Reports</h2>
-                <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-full px-4 py-2 border rounded-lg mb-4" />
-                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-4 mb-6 text-white">
-                  <div className="grid grid-cols-3 gap-2 mb-3 text-sm">
-                    <div><div className="font-semibold">Lunch</div><div>{totals.lunch} × ₹{rates.lunch}</div></div>
-                    <div><div className="font-semibold">Dinner</div><div>{totals.dinner} × ₹{rates.dinner}</div></div>
-                    <div><div className="font-semibold">Milk</div><div>{totals.milk} × ₹{rates.milk}</div></div>
-                  </div>
-                  <div className="text-2xl font-bold border-t border-white/30 pt-3">Total: ₹{total}</div>
-                </div>
-                <div className="border rounded-xl p-4 mb-4">
-                  <h3 className="font-semibold mb-3">Select Reports:</h3>
-                  <div className="space-y-2 mb-4">
-                    <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                      <input type="checkbox" checked={selections.lunch} onChange={(e) => setSelections({...selections,lunch:e.target.checked,combined:false})} className="w-5 h-5" />
-                      <div><div className="font-medium">Lunch</div><div className="text-sm text-gray-600">{vendors.lunch}</div></div>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                      <input type="checkbox" checked={selections.dinner} onChange={(e) => setSelections({...selections,dinner:e.target.checked,combined:false})} className="w-5 h-5" />
-                      <div><div className="font-medium">Dinner</div><div className="text-sm text-gray-600">{vendors.dinner}</div></div>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                      <input type="checkbox" checked={selections.milk} onChange={(e) => setSelections({...selections,milk:e.target.checked,combined:false})} className="w-5 h-5" />
-                      <div><div className="font-medium">Milk</div><div className="text-sm text-gray-600">{vendors.milk}</div></div>
-                    </label>
-                    <div className="border-t pt-2">
-                      <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" checked={selections.combined} onChange={(e) => setSelections({lunch:false,dinner:false,milk:false,combined:e.target.checked})} className="w-5 h-5" />
-                        <div><div className="font-medium">Combined (All 3)</div><div className="text-sm text-gray-600">Single report</div></div>
-                      </label>
-                    </div>
-                  </div>
-                  <button onClick={() => download('month')} className="w-full px-3 py-2 bg-indigo-600 text-white rounded-lg font-medium">Generate Month Report</button>
-                </div>
-              </div>
-            )}
-
-            {tab === 'analytics' && (
-              <div className={`${card} rounded-2xl shadow-lg p-6`}>
-                <h2 className="text-xl font-bold mb-4">Analytics</h2>
-                <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-full px-4 py-2 border rounded-lg mb-4" />
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-100">
-                    <tr><th className="text-left py-2 px-2">Date</th><th className="text-center py-2">L</th><th className="text-center py-2">D</th><th className="text-center py-2">M</th></tr>
-                  </thead>
-                  <tbody>
-                    {report.map(d => (
-                      <tr key={d.date} className="border-b">
-                        <td className="py-2 px-2">{new Date(d.date).toLocaleDateString('en-US',{day:'2-digit',month:'short'})}</td>
-                        <td className="text-center">{d.lunch?<CheckIcon/>:'-'}</td>
-                        <td className="text-center">{d.dinner?<CheckIcon/>:'-'}</td>
-                        <td className="text-center">{d.milk?<CheckIcon/>:'-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {tab === 'settings' && (
-              <div className={`${card} rounded-2xl shadow-lg p-6`}>
-                <h2 className="text-xl font-bold mb-4">Settings</h2>
-                
-                {/* Data Recovery Section */}
-                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                  <h3 className="font-semibold text-yellow-800 mb-2">🔍 Data Recovery Tool</h3>
-                  <p className="text-sm text-yellow-700 mb-3">Lost your delivery data? Click below to check all storage locations.</p>
-                  <button 
-                    onClick={() => {
-                      let found = [];
-                      try {
-                        const keys = Object.keys(localStorage);
-                        keys.forEach(key => {
-                          if (key.includes('delivery') || key.includes('Delivery')) {
-                            const val = localStorage.getItem(key);
-                            if (val) {
-                              try {
-                                const parsed = JSON.parse(val);
-                                if (parsed.deliveries) {
-                                  const count = Object.keys(parsed.deliveries).length;
-                                  found.push(`${key}: ${count} days`);
-                                }
-                              } catch(e) {}
-                            }
-                          }
-                        });
-                        
-                        if (found.length > 0) {
-                          alert('Found data in storage:\\n\\n' + found.join('\\n') + '\\n\\nTrying to recover...');
-                          
-                          // Try to recover from backup
-                          const backup = localStorage.getItem('deliveryDataBackup');
-                          if (backup) {
-                            const data = JSON.parse(backup);
-                            setDeliveries(data.deliveries || {});
-                            alert('Data recovered from backup!');
-                            window.location.reload();
-                          }
-                        } else {
-                          alert('No data found in any storage location. Data may be permanently lost.\\n\\nTo prevent this in the future:\\n1. Export backups weekly\\n2. Keep the app added to Home Screen\\n3. Don\\'t clear Safari data');
-                        }
-                      } catch(e) {
-                        alert('Recovery failed: ' + e.message);
-                      }
-                    }}
-                    className="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg font-medium"
-                  >
-                    Try Data Recovery
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-semibold mb-2">Rates (₹)</h3>
-                    {['lunch','dinner','milk'].map(t => (
-                      <div key={t} className="flex justify-between mb-2">
-                        <label className="capitalize">{t}</label>
-                        <input type="number" value={rates[t]} onChange={(e) => {setRates({...rates,[t]:Number(e.target.value)});setSettingsChanged(true)}} className="w-24 px-2 py-1 border rounded" />
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">Vendors</h3>
-                    {['lunch','dinner','milk'].map(t => (
-                      <div key={t} className="flex justify-between mb-2">
-                        <label className="capitalize">{t}</label>
-                        <input type="text" value={vendors[t]} onChange={(e) => {setVendors({...vendors,[t]:e.target.value});setSettingsChanged(true)}} className="w-40 px-2 py-1 border rounded" />
-                      </div>
-                    ))}
-                  </div>
-                  {settingsChanged && (
-                    <button onClick={saveSettings} className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold">Update Settings</button>
-                  )}
-                  
-                  <div className="border-t pt-4 mt-4">
-                    <h3 className="font-semibold mb-2">Backup & Restore</h3>
-                    <p className="text-sm text-gray-600 mb-3">Current data: {Object.keys(deliveries).length} days tracked</p>
-                    <div className="space-y-2">
-                      <button 
-                        onClick={() => {
-                          const backup = { deliveries, rates, vendors, exportDate: new Date().toISOString() };
-                          const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = `delivery-backup-${new Date().toISOString().split('T')[0]}.json`;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                        }}
-                        className="w-full px-4 py-2 bg-green-600 text-white rounded-lg"
-                      >
-                        📥 Export Backup
-                      </button>
-                      <label className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center cursor-pointer">
-                        📤 Import Backup
-                        <input 
-                          type="file" 
-                          accept=".json" 
-                          onChange={(e) => {
-                            const file = e.target.files[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (event) => {
-                                try {
-                                  const backup = JSON.parse(event.target.result);
-                                  if (backup.deliveries) setDeliveries(backup.deliveries);
-                                  if (backup.rates) setRates(backup.rates);
-                                  if (backup.vendors) setVendors(backup.vendors);
-                                  alert('Backup restored successfully!');
-                                  e.target.value = '';
-                                } catch (err) {
-                                  alert('Invalid backup file.');
-                                  e.target.value = '';
-                                }
-                              };
-                              reader.readAsText(file);
-                            }
-                          }}
-                          className="hidden" 
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+          <div class="stat-card">
+            <div class="stat-value" id="thisMonth">0</div>
+            <div class="stat-label">This Month</div>
           </div>
-
-          <div className={`${card} fixed bottom-0 left-0 right-0 shadow-lg border-t`}>
-            <div className="max-w-2xl mx-auto flex justify-around py-2">
-              <button onClick={() => setTab('home')} className={`flex flex-col items-center p-2 ${tab==='home'?'text-indigo-600':'text-gray-500'}`}><HomeIcon /><span className="text-xs mt-1">Home</span></button>
-              <button onClick={() => setTab('reports')} className={`flex flex-col items-center p-2 ${tab==='reports'?'text-indigo-600':'text-gray-500'}`}><FileIcon /><span className="text-xs mt-1">Reports</span></button>
-              <button onClick={() => setTab('analytics')} className={`flex flex-col items-center p-2 ${tab==='analytics'?'text-indigo-600':'text-gray-500'}`}><ChartIcon /><span className="text-xs mt-1">Analytics</span></button>
-              <button onClick={() => setTab('settings')} className={`flex flex-col items-center p-2 ${tab==='settings'?'text-indigo-600':'text-gray-500'}`}><SettingsIcon /><span className="text-xs mt-1">Settings</span></button>
-            </div>
+          <div class="stat-card">
+            <div class="stat-value">₹<span id="monthTotal">0</span></div>
+            <div class="stat-label">Total</div>
           </div>
         </div>
-      );
+      </div>
+
+      <div class="card">
+        <h2>Track Delivery</h2>
+        <div class="date-nav">
+          <button onclick="changeDate(-1)">◀</button>
+          <input type="date" id="selectedDate" max="" onchange="loadDateData()">
+          <button onclick="changeDate(1)">▶</button>
+        </div>
+        
+        <div class="input-group">
+          <label>
+            <input type="checkbox" id="lunchCheck">
+            <span>🍱 Lunch (<span id="lunchVendor">Poonam Bhabhi</span>)</span>
+          </label>
+        </div>
+        
+        <div class="input-group">
+          <label>
+            <input type="checkbox" id="dinnerCheck">
+            <span>🍽️ Dinner (<span id="dinnerVendor">Neetu Bhabhi</span>)</span>
+          </label>
+        </div>
+        
+        <div class="input-group">
+          <label>
+            <input type="checkbox" id="milkCheck">
+            <span>🥛 Milk (<span id="milkVendor">Vishal Bhaiya</span>)</span>
+          </label>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveDelivery()">💾 Submit & Save</button>
+
+        <div style="font-size: 12px; color: #6b7280; text-align: center; margin-top: 10px;">
+          Last saved: <span id="lastSaved">Never</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports Tab -->
+    <div id="reportsTab" class="tab-content hidden">
+      <div class="card">
+        <h2>Generate Reports</h2>
+        <input type="month" id="reportMonth" onchange="updateReport()">
+        
+        <div class="summary">
+          <h3>Monthly Summary</h3>
+          <p style="font-size: 14px;">Lunch: <span id="lunchTotal">0</span> × ₹<span id="lunchRate">100</span> = ₹<span id="lunchAmount">0</span></p>
+          <p style="font-size: 14px;">Dinner: <span id="dinnerTotal">0</span> × ₹<span id="dinnerRate">150</span> = ₹<span id="dinnerAmount">0</span></p>
+          <p style="font-size: 14px;">Milk: <span id="milkTotal">0</span> × ₹<span id="milkRate">16</span> = ₹<span id="milkAmount">0</span></p>
+          <div class="total">₹<span id="grandTotal">0</span></div>
+        </div>
+
+        <h3 style="margin: 15px 0 10px 0; font-size: 15px;">Select Reports:</h3>
+        
+        <div class="input-group">
+          <label>
+            <input type="checkbox" id="reportLunch" onchange="handleReportSelection()">
+            <span>🍱 Lunch Only</span>
+          </label>
+        </div>
+        
+        <div class="input-group">
+          <label>
+            <input type="checkbox" id="reportDinner" onchange="handleReportSelection()">
+            <span>🍽️ Dinner Only</span>
+          </label>
+        </div>
+        
+        <div class="input-group">
+          <label>
+            <input type="checkbox" id="reportMilk" onchange="handleReportSelection()">
+            <span>🥛 Milk Only</span>
+          </label>
+        </div>
+        
+        <div class="input-group" style="border-top: 2px solid #e5e7eb; padding-top: 10px;">
+          <label>
+            <input type="checkbox" id="reportCombined" onchange="handleReportSelection()">
+            <span>📊 Combined (All 3 Items)</span>
+          </label>
+        </div>
+
+        <button class="btn btn-success" onclick="generateSelectedReports()">📊 Download Reports</button>
+      </div>
+    </div>
+
+    <!-- Analytics Tab -->
+    <div id="analyticsTab" class="tab-content hidden">
+      <div class="card">
+        <h2>Delivery History</h2>
+        <input type="month" id="analyticsMonth" onchange="updateHistory()">
+        <div id="historyTable"></div>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="settingsTab" class="tab-content hidden">
+      <div class="card">
+        <div id="alertBox" class="alert" style="display:none;"></div>
+
+        <h2>Storage Health</h2>
+        <div style="background: #f3f4f6; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px;">
+          <p>📊 Data: <strong><span id="storageSize">0</span> KB</strong> used</p>
+          <p>💾 Entries: <strong><span id="entryCount">0</span> days</strong></p>
+          <p>🕐 Last Backup: <strong><span id="lastBackup">Never</span></strong></p>
+        </div>
+
+        <button class="btn btn-warning" onclick="tryRecovery()">🔍 Auto-Recover Lost Data</button>
+
+        <h2 style="margin-top: 20px;">Rates (₹/delivery)</h2>
+        <div class="settings-row">
+          <label>🍱 Lunch:</label>
+          <input type="number" id="lunchRateInput" value="100" style="width: 100px;" onchange="saveSettings()">
+        </div>
+        <div class="settings-row">
+          <label>🍽️ Dinner:</label>
+          <input type="number" id="dinnerRateInput" value="150" style="width: 100px;" onchange="saveSettings()">
+        </div>
+        <div class="settings-row">
+          <label>🥛 Milk:</label>
+          <input type="number" id="milkRateInput" value="16" style="width: 100px;" onchange="saveSettings()">
+        </div>
+
+        <h2 style="margin-top: 20px;">Vendors</h2>
+        <div class="settings-row">
+          <label>🍱 Lunch:</label>
+          <input type="text" id="lunchVendorInput" value="Poonam Bhabhi" style="width: 180px;" onchange="saveSettings()">
+        </div>
+        <div class="settings-row">
+          <label>🍽️ Dinner:</label>
+          <input type="text" id="dinnerVendorInput" value="Neetu Bhabhi" style="width: 180px;" onchange="saveSettings()">
+        </div>
+        <div class="settings-row">
+          <label>🥛 Milk:</label>
+          <input type="text" id="milkVendorInput" value="Vishal Bhaiya" style="width: 180px;" onchange="saveSettings()">
+        </div>
+
+        <h2 style="margin-top: 20px;">Backup & Recovery</h2>
+        <button class="btn btn-success" onclick="exportBackup()">📥 Export Backup</button>
+        <label class="btn btn-primary" style="display: block; text-align: center;">
+          📤 Import Backup
+          <input type="file" accept=".json" onchange="importBackup(event)" style="display: none;">
+        </label>
+        <button class="btn btn-secondary" onclick="autoBackup()">💾 Create Auto-Backup Now</button>
+        <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="active" onclick="showTab('home')">🏠 Home</button>
+    <button onclick="showTab('reports')">📊 Reports</button>
+    <button onclick="showTab('analytics')">📈 Analytics</button>
+    <button onclick="showTab('settings')">⚙️ Settings</button>
+  </div>
+
+  <script>
+    let deliveries = {};
+    let settings = {
+      rates: { lunch: 100, dinner: 150, milk: 16 },
+      vendors: { lunch: 'Poonam Bhabhi', dinner: 'Neetu Bhabhi', milk: 'Vishal Bhaiya' }
+    };
+    let saveTimeout;
+
+    window.onload = function() {
+      initApp();
+      checkOnlineStatus();
+      setInterval(checkOnlineStatus, 5000);
+      setInterval(autoBackup, 3600000); // Auto-backup every hour
+    };
+
+    function initApp() {
+      loadData();
+      document.getElementById('selectedDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('selectedDate').max = new Date().toISOString().split('T')[0];
+      document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7);
+      document.getElementById('analyticsMonth').value = new Date().toISOString().slice(0, 7);
+      loadDateData();
+      updateAllStats();
     }
 
-    ReactDOM.render(<App />, document.getElementById('root'));
+    function loadData() {
+      try {
+        // Try multiple storage locations
+        let loaded = false;
+        
+        const primary = localStorage.getItem('deliveryProV2');
+        if (primary) {
+          const data = JSON.parse(primary);
+          if (data.deliveries && Object.keys(data.deliveries).length > 0) {
+            deliveries = data.deliveries;
+            settings = data.settings || settings;
+            loaded = true;
+            console.log('✓ Loaded from primary storage');
+          }
+        }
+        
+        if (!loaded) {
+          const backup = localStorage.getItem('deliveryProBackup');
+          if (backup) {
+            const data = JSON.parse(backup);
+            if (data.deliveries && Object.keys(data.deliveries).length > 0) {
+              deliveries = data.deliveries;
+              settings = data.settings || settings;
+              loaded = true;
+              showAlert('Data recovered from backup!', 'success');
+            }
+          }
+        }
+        
+        // Update UI with settings
+        document.getElementById('lunchRateInput').value = settings.rates.lunch;
+        document.getElementById('dinnerRateInput').value = settings.rates.dinner;
+        document.getElementById('milkRateInput').value = settings.rates.milk;
+        document.getElementById('lunchVendorInput').value = settings.vendors.lunch;
+        document.getElementById('dinnerVendorInput').value = settings.vendors.dinner;
+        document.getElementById('milkVendorInput').value = settings.vendors.milk;
+        updateVendorNames();
+        
+        if (loaded) {
+          const lastSave = localStorage.getItem('lastSaveTime');
+          if (lastSave) {
+            const date = new Date(parseInt(lastSave));
+            document.getElementById('lastSaved').textContent = date.toLocaleString();
+          }
+        }
+      } catch (e) {
+        console.error('Load error:', e);
+        showAlert('Error loading data: ' + e.message, 'error');
+      }
+    }
+
+    function saveData() {
+      try {
+        const data = { 
+          deliveries, 
+          settings, 
+          timestamp: Date.now(),
+          version: 2 
+        };
+        
+        // Save to multiple locations
+        localStorage.setItem('deliveryProV2', JSON.stringify(data));
+        localStorage.setItem('deliveryProBackup', JSON.stringify(data));
+        localStorage.setItem('lastSaveTime', Date.now().toString());
+        
+        // Show save indicator
+        const indicator = document.getElementById('saveIndicator');
+        indicator.classList.add('show');
+        setTimeout(() => indicator.classList.remove('show'), 2000);
+        
+        // Update last saved time
+        document.getElementById('lastSaved').textContent = new Date().toLocaleTimeString();
+        
+        console.log('✓ Data saved successfully');
+      } catch (e) {
+        console.error('Save error:', e);
+        if (e.name === 'QuotaExceededError') {
+          showAlert('Storage full! Export backup and clear old data.', 'error');
+        }
+      }
+    }
+
+    function saveDelivery() {
+      const date = document.getElementById('selectedDate').value;
+      deliveries[date] = {
+        lunch: document.getElementById('lunchCheck').checked,
+        dinner: document.getElementById('dinnerCheck').checked,
+        milk: document.getElementById('milkCheck').checked
+      };
+      saveData();
+      updateAllStats();
+      showAlert('✓ Delivery saved successfully!', 'success');
+    }
+
+    function autoSave() {
+      // Removed - manual save only via Submit button
+    }
+
+    function loadDateData() {
+      const date = document.getElementById('selectedDate').value;
+      const data = deliveries[date] || {};
+      document.getElementById('lunchCheck').checked = data.lunch || false;
+      document.getElementById('dinnerCheck').checked = data.dinner || false;
+      document.getElementById('milkCheck').checked = data.milk || false;
+    }
+
+    function changeDate(days) {
+      const input = document.getElementById('selectedDate');
+      const date = new Date(input.value);
+      date.setDate(date.getDate() + days);
+      const newDate = date.toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
+      if (newDate <= today) {
+        input.value = newDate;
+        loadDateData();
+      }
+    }
+
+    function saveSettings() {
+      settings.rates.lunch = Number(document.getElementById('lunchRateInput').value);
+      settings.rates.dinner = Number(document.getElementById('dinnerRateInput').value);
+      settings.rates.milk = Number(document.getElementById('milkRateInput').value);
+      settings.vendors.lunch = document.getElementById('lunchVendorInput').value;
+      settings.vendors.dinner = document.getElementById('dinnerVendorInput').value;
+      settings.vendors.milk = document.getElementById('milkVendorInput').value;
+      
+      updateVendorNames();
+      saveData();
+      showAlert('Settings saved!', 'success');
+      updateAllStats();
+    }
+
+    function updateVendorNames() {
+      document.getElementById('lunchVendor').textContent = settings.vendors.lunch;
+      document.getElementById('dinnerVendor').textContent = settings.vendors.dinner;
+      document.getElementById('milkVendor').textContent = settings.vendors.milk;
+    }
+
+    function updateAllStats() {
+      // Update home stats
+      document.getElementById('totalDays').textContent = Object.keys(deliveries).length;
+      
+      const month = new Date().toISOString().slice(0, 7);
+      const monthData = Object.keys(deliveries).filter(d => d.startsWith(month));
+      document.getElementById('thisMonth').textContent = monthData.length;
+      
+      // Calculate month total
+      let totals = { lunch: 0, dinner: 0, milk: 0 };
+      monthData.forEach(date => {
+        const data = deliveries[date];
+        if (data.lunch) totals.lunch++;
+        if (data.dinner) totals.dinner++;
+        if (data.milk) totals.milk++;
+      });
+      const total = (totals.lunch * settings.rates.lunch) + (totals.dinner * settings.rates.dinner) + (totals.milk * settings.rates.milk);
+      document.getElementById('monthTotal').textContent = total;
+      
+      // Update storage stats
+      const dataSize = JSON.stringify({deliveries, settings}).length;
+      document.getElementById('storageSize').textContent = (dataSize / 1024).toFixed(2);
+      document.getElementById('entryCount').textContent = Object.keys(deliveries).length;
+      
+      const lastBackupTime = localStorage.getItem('lastBackupTime');
+      if (lastBackupTime) {
+        const date = new Date(parseInt(lastBackupTime));
+        document.getElementById('lastBackup').textContent = date.toLocaleDateString();
+      }
+      
+      updateReport();
+    }
+
+    function updateReport() {
+      const month = document.getElementById('reportMonth').value;
+      const [year, m] = month.split('-').map(Number);
+      const days = new Date(year, m, 0).getDate();
+      
+      let totals = { lunch: 0, dinner: 0, milk: 0 };
+      
+      for (let d = 1; d <= days; d++) {
+        const date = `${month}-${String(d).padStart(2, '0')}`;
+        const data = deliveries[date] || {};
+        if (data.lunch) totals.lunch++;
+        if (data.dinner) totals.dinner++;
+        if (data.milk) totals.milk++;
+      }
+      
+      document.getElementById('lunchTotal').textContent = totals.lunch;
+      document.getElementById('dinnerTotal').textContent = totals.dinner;
+      document.getElementById('milkTotal').textContent = totals.milk;
+      document.getElementById('lunchRate').textContent = settings.rates.lunch;
+      document.getElementById('dinnerRate').textContent = settings.rates.dinner;
+      document.getElementById('milkRate').textContent = settings.rates.milk;
+      
+      const amounts = {
+        lunch: totals.lunch * settings.rates.lunch,
+        dinner: totals.dinner * settings.rates.dinner,
+        milk: totals.milk * settings.rates.milk
+      };
+      
+      document.getElementById('lunchAmount').textContent = amounts.lunch;
+      document.getElementById('dinnerAmount').textContent = amounts.dinner;
+      document.getElementById('milkAmount').textContent = amounts.milk;
+      document.getElementById('grandTotal').textContent = amounts.lunch + amounts.dinner + amounts.milk;
+    }
+
+    function updateHistory() {
+      const month = document.getElementById('analyticsMonth').value;
+      const [year, m] = month.split('-').map(Number);
+      const days = new Date(year, m, 0).getDate();
+      
+      let html = '<table><thead><tr><th>Date</th><th>L</th><th>D</th><th>M</th></tr></thead><tbody>';
+      
+      for (let d = 1; d <= days; d++) {
+        const date = `${month}-${String(d).padStart(2, '0')}`;
+        const data = deliveries[date] || {};
+        const dateObj = new Date(date);
+        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
+        
+        html += `<tr><td>${dayName}</td><td style="text-align:center;">${data.lunch ? '✓' : '-'}</td><td style="text-align:center;">${data.dinner ? '✓' : '-'}</td><td style="text-align:center;">${data.milk ? '✓' : '-'}</td></tr>`;
+      }
+      
+      html += '</tbody></table>';
+      document.getElementById('historyTable').innerHTML = html;
+    }
+
+    function handleReportSelection() {
+      const combined = document.getElementById('reportCombined');
+      const lunch = document.getElementById('reportLunch');
+      const dinner = document.getElementById('reportDinner');
+      const milk = document.getElementById('reportMilk');
+      
+      if (combined.checked) {
+        lunch.checked = false;
+        dinner.checked = false;
+        milk.checked = false;
+        lunch.disabled = true;
+        dinner.disabled = true;
+        milk.disabled = true;
+      } else {
+        lunch.disabled = false;
+        dinner.disabled = false;
+        milk.disabled = false;
+      }
+    }
+
+    function generateSelectedReports() {
+      const selected = [];
+      const isCombined = document.getElementById('reportCombined').checked;
+      
+      if (isCombined) {
+        selected.push('combined');
+      } else {
+        if (document.getElementById('reportLunch').checked) selected.push('lunch');
+        if (document.getElementById('reportDinner').checked) selected.push('dinner');
+        if (document.getElementById('reportMilk').checked) selected.push('milk');
+      }
+      
+      if (selected.length === 0) {
+        showAlert('Please select at least one report!', 'error');
+        return;
+      }
+      
+      const month = document.getElementById('reportMonth').value;
+      const [year, m] = month.split('-').map(Number);
+      const monthName = new Date(year, m - 1).toLocaleString('default', { month: 'long' });
+      const days = new Date(year, m, 0).getDate();
+      
+      selected.forEach(type => {
+        let totals = { lunch: 0, dinner: 0, milk: 0 };
+        let rows = '';
+        
+        for (let d = 1; d <= days; d++) {
+          const date = `${month}-${String(d).padStart(2, '0')}`;
+          const data = deliveries[date] || {};
+          const dateObj = new Date(date);
+          const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
+          
+          if (data.lunch) totals.lunch++;
+          if (data.dinner) totals.dinner++;
+          if (data.milk) totals.milk++;
+          
+          if (type === 'combined') {
+            rows += `<tr><td><b>${dayName}</b></td><td class="${data.lunch?'yes':'no'}">${data.lunch?'✓ Yes':'✗ No'}</td><td class="${data.dinner?'yes':'no'}">${data.dinner?'✓ Yes':'✗ No'}</td><td class="${data.milk?'yes':'no'}">${data.milk?'✓ Yes':'✗ No'}</td></tr>`;
+          } else {
+            rows += `<tr><td><b>${dayName}</b></td><td class="${data[type]?'yes':'no'}">${data[type]?'✓ Yes':'✗ No'}</td></tr>`;
+          }
+        }
+        
+        let html = '';
+        
+        if (type === 'combined') {
+          const amounts = {
+            lunch: totals.lunch * settings.rates.lunch,
+            dinner: totals.dinner * settings.rates.dinner,
+            milk: totals.milk * settings.rates.milk
+          };
+          const total = amounts.lunch + amounts.dinner + amounts.milk;
+          
+          html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Combined Report</title><style>body{font-family:Arial;max-width:800px;margin:40px auto;padding:20px;background:#f5f5f5}.box{background:white;border-radius:12px;padding:30px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}h1{color:#1f2937;text-align:center;border-bottom:3px solid #667eea;padding-bottom:20px}table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#667eea;color:white;padding:12px;text-align:left}td{padding:10px;border-bottom:1px solid #e5e7eb}.yes{color:#059669;font-weight:600}.no{color:#dc2626}.summary{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:25px;border-radius:10px;margin-top:30px}.total{font-size:32px;font-weight:bold;text-align:center;margin-top:20px;padding-top:20px;border-top:2px solid rgba(255,255,255,0.3)}</style></head><body><div class="box"><h1>Combined Delivery Report<br><small style="color:#6b7280">${monthName} ${year}</small></h1><table><thead><tr><th>Date</th><th>Lunch</th><th>Dinner</th><th>Milk</th></tr></thead><tbody>${rows}</tbody></table><div class="summary"><h2>Summary</h2><p>Lunch: ${totals.lunch} × ₹${settings.rates.lunch} = ₹${amounts.lunch}</p><p>Dinner: ${totals.dinner} × ₹${settings.rates.dinner} = ₹${amounts.dinner}</p><p>Milk: ${totals.milk} × ₹${settings.rates.milk} = ₹${amounts.milk}</p><div class="total">Total: ₹${total}</div></div></div></body></html>`;
+        } else {
+          const itemName = type.charAt(0).toUpperCase() + type.slice(1);
+          const vendor = settings.vendors[type];
+          const rate = settings.rates[type];
+          const amount = totals[type] * rate;
+          
+          html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${itemName} Report</title><style>body{font-family:Arial;max-width:800px;margin:40px auto;padding:20px;background:#f5f5f5}.box{background:white;border-radius:12px;padding:30px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}h1{color:#1f2937;text-align:center;border-bottom:3px solid #667eea;padding-bottom:20px}.info{background:#eff6ff;padding:15px;border-radius:8px;margin:20px 0;border-left:4px solid #667eea}.info p{margin:5px 0;color:#1e40af;font-weight:500}table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#667eea;color:white;padding:12px;text-align:left}td{padding:10px;border-bottom:1px solid #e5e7eb}.yes{color:#059669;font-weight:600}.no{color:#dc2626}.summary{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:25px;border-radius:10px;margin-top:30px}.total{font-size:32px;font-weight:bold;text-align:center;margin-top:20px;padding-top:20px;border-top:2px solid rgba(255,255,255,0.3)}</style></head><body><div class="box"><h1>${itemName} Delivery Report<br><small style="color:#6b7280">${monthName} ${year}</small></h1><div class="info"><p><strong>Vendor:</strong> ${vendor}</p><p><strong>Rate:</strong> ₹${rate} per delivery</p></div><table><thead><tr><th>Date</th><th>Delivered</th></tr></thead><tbody>${rows}</tbody></table><div class="summary"><h2>Summary</h2><p>Total Deliveries: ${totals[type]}</p><p>Rate per Delivery: ₹${rate}</p><div class="total">Total Amount: ₹${amount}</div></div></div></body></html>`;
+        }
+        
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `report-${type}-${month}.html`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+      
+      // Reset checkboxes
+      document.getElementById('reportLunch').checked = false;
+      document.getElementById('reportDinner').checked = false;
+      document.getElementById('reportMilk').checked = false;
+      document.getElementById('reportCombined').checked = false;
+      handleReportSelection();
+      
+      showAlert('Reports downloaded successfully!', 'success');
+    }
+
+    function exportBackup() {
+      const backup = { deliveries, settings, exportDate: new Date().toISOString(), version: 2 };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `delivery-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      localStorage.setItem('lastBackupTime', Date.now().toString());
+      updateAllStats();
+      showAlert('Backup exported successfully!', 'success');
+    }
+
+    function importBackup(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const backup = JSON.parse(e.target.result);
+            if (!backup.deliveries) throw new Error('Invalid backup format');
+            
+            deliveries = backup.deliveries;
+            settings = backup.settings || settings;
+            saveData();
+            loadData();
+            updateAllStats();
+            updateHistory();
+            showAlert(`Backup restored! ${Object.keys(deliveries).length} days recovered.`, 'success');
+            setTimeout(() => location.reload(), 1500);
+          } catch (err) {
+            showAlert('Invalid backup file: ' + err.message, 'error');
+          }
+        };
+        reader.readAsText(file);
+      }
+      event.target.value = '';
+    }
+
+    function autoBackup() {
+      if (Object.keys(deliveries).length > 0) {
+        const backup = { deliveries, settings, autoBackup: true, timestamp: Date.now() };
+        localStorage.setItem('autoBackup', JSON.stringify(backup));
+        localStorage.setItem('lastBackupTime', Date.now().toString());
+        updateAllStats();
+        console.log('✓ Auto-backup created');
+        showAlert('Auto-backup created!', 'success');
+      }
+    }
+
+    function tryRecovery() {
+      try {
+        const sources = [
+          'deliveryProBackup',
+          'autoBackup',
+          'deliveryTrackerSimple',
+          'deliveryData',
+          'deliveryTrackerData'
+        ];
+        
+        let recovered = null;
+        let recoveredFrom = '';
+        
+        for (const source of sources) {
+          const data = localStorage.getItem(source);
+          if (data) {
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.deliveries && Object.keys(parsed.deliveries).length > 0) {
+                recovered = parsed;
+                recoveredFrom = source;
+                break;
+              }
+            } catch (e) {}
+          }
+        }
+        
+        if (recovered) {
+          deliveries = recovered.deliveries;
+          settings = recovered.settings || settings;
+          saveData();
+          loadData();
+          updateAllStats();
+          showAlert(`✓ Recovered ${Object.keys(deliveries).length} days from ${recoveredFrom}!`, 'success');
+          setTimeout(() => location.reload(), 2000);
+        } else {
+          showAlert('No recoverable data found in any storage location.', 'error');
+        }
+      } catch (e) {
+        showAlert('Recovery failed: ' + e.message, 'error');
+      }
+    }
+
+    function clearAllData() {
+      if (confirm('⚠️ This will DELETE ALL DATA permanently. Export backup first!\n\nAre you absolutely sure?')) {
+        if (confirm('Last chance! This cannot be undone. Continue?')) {
+          deliveries = {};
+          saveData();
+          showAlert('All data cleared!', 'success');
+          setTimeout(() => location.reload(), 1000);
+        }
+      }
+    }
+
+    function checkOnlineStatus() {
+      const indicator = document.getElementById('statusIndicator');
+      if (navigator.onLine) {
+        indicator.className = 'status online';
+        indicator.textContent = '● Online';
+      } else {
+        indicator.className = 'status offline';
+        indicator.textContent = '● Offline';
+      }
+    }
+
+    function showAlert(message, type) {
+      const box = document.getElementById('alertBox');
+      box.textContent = message;
+      box.className = `alert ${type}`;
+      box.style.display = 'block';
+      setTimeout(() => {
+        box.style.display = 'none';
+      }, 5000);
+    }
+
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+      document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(tab + 'Tab').classList.remove('hidden');
+      event.target.classList.add('active');
+      
+      if (tab === 'reports') updateReport();
+      if (tab === 'analytics') updateHistory();
+      if (tab === 'settings') updateAllStats();
+    }
   </script>
 </body>
 </html>
